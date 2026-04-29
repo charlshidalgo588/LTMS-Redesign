@@ -1,0 +1,168 @@
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Large text */
+html.ltms-large-text {
+  font-size: 18px;
+}
+
+/* Reduced motion */
+html.ltms-reduced-motion *,
+html.ltms-reduced-motion *::before,
+html.ltms-reduced-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast */
+html.ltms-high-contrast {
+  filter: contrast(1.12);
+}
+
+html.ltms-high-contrast button,
+html.ltms-high-contrast a,
+html.ltms-high-contrast input,
+html.ltms-high-contrast select,
+html.ltms-high-contrast textarea {
+  border-width: 2px !important;
+}
+
+/* Dark mode base */
+html.ltms-dark-mode,
+html.ltms-dark-mode body,
+html.ltms-dark-mode #app {
+  background: #0f172a !important;
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .page {
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.98)),
+    url("./assets/BGC.jpg") center/cover no-repeat !important;
+}
+
+html.ltms-dark-mode .topbar {
+  background: linear-gradient(180deg, #0b2448 0%, #081a35 100%) !important;
+}
+
+html.ltms-dark-mode .service-card,
+html.ltms-dark-mode .recent-activity-card,
+html.ltms-dark-mode .help-card,
+html.ltms-dark-mode .news-panel,
+html.ltms-dark-mode .news-item-card,
+html.ltms-dark-mode .advisory-card,
+html.ltms-dark-mode .terms-modal,
+html.ltms-dark-mode .settings-modal-card,
+html.ltms-dark-mode .logout-modal-card,
+html.ltms-dark-mode .user-dropdown,
+html.ltms-dark-mode .activity-item {
+  background: #111c2f !important;
+  color: #e5edf7 !important;
+  border-color: #243449 !important;
+}
+
+html.ltms-dark-mode .card-title,
+html.ltms-dark-mode .news-panel-head h3,
+html.ltms-dark-mode .activity-copy strong,
+html.ltms-dark-mode .help-card h3,
+html.ltms-dark-mode .settings-option-copy strong,
+html.ltms-dark-mode .logout-modal-copy h3,
+html.ltms-dark-mode .terms-title-wrap h2,
+html.ltms-dark-mode .section-head h3,
+html.ltms-dark-mode .news-item-card h4,
+html.ltms-dark-mode .advisory-card strong {
+  color: #f8fbff !important;
+}
+
+html.ltms-dark-mode .card-desc,
+html.ltms-dark-mode .activity-copy span,
+html.ltms-dark-mode .help-card p,
+html.ltms-dark-mode .news-item-card p,
+html.ltms-dark-mode .advisory-card p,
+html.ltms-dark-mode .settings-option-copy span,
+html.ltms-dark-mode .logout-modal-copy p,
+html.ltms-dark-mode .news-panel-head p,
+html.ltms-dark-mode .hero-caption,
+html.ltms-dark-mode .hero-subtitle,
+html.ltms-dark-mode .view-all-link,
+html.ltms-dark-mode .activity-meta,
+html.ltms-dark-mode .terms-body {
+  color: #b7c6d8 !important;
+}
+
+html.ltms-dark-mode .hero-title {
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .hero-title span {
+  color: #ffffff !important;
+}
+
+html.ltms-dark-mode .user-dropdown-item {
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .user-dropdown-item:hover {
+  background: #1a2a42 !important;
+  color: #ffffff !important;
+}
+
+html.ltms-dark-mode input,
+html.ltms-dark-mode select,
+html.ltms-dark-mode textarea {
+  background: #0f172a !important;
+  color: #e5edf7 !important;
+  border-color: #314155 !important;
+}
+
+html.ltms-dark-mode .settings-close-btn,
+html.ltms-dark-mode .logout-cancel-btn,
+html.ltms-dark-mode .terms-top-close,
+html.ltms-dark-mode .modal-close {
+  background: #16243a !important;
+  color: #e5edf7 !important;
+  border-color: #314155 !important;
+}
+
+html.ltms-dark-mode .footer {
+  background: #081a35 !important;
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .news-kicker,
+html.ltms-dark-mode .news-badge,
+html.ltms-dark-mode .advisory-label {
+  background: #1a2a42 !important;
+  color: #dbeafe !important;
+}
+
+html.ltms-dark-mode .icon-shell {
+  background: linear-gradient(180deg, #16243a 0%, #1a2a42 100%) !important;
+  border-color: #314155 !important;
+}
+
+html.ltms-dark-mode .premium-icon,
+html.ltms-dark-mode .activity-icon,
+html.ltms-dark-mode .activity-arrow {
+  color: #93c5fd !important;
+}
+
+html.ltms-dark-mode .settings-option-card {
+  background: linear-gradient(180deg, #111c2f 0%, #16243a 100%) !important;
+  border-color: #243449 !important;
+}
+
+html.ltms-dark-mode .slider {
+  background: #314155 !important;
+}
+
+html.ltms-dark-mode .switch input:checked + .slider {
+  background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%) !important;
+}

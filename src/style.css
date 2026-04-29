@@ -1,13 +1,119 @@
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100%;
+html.ltms-large-text {
+  font-size: 18px;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #edf1f5;
+html.ltms-reduced-motion *,
+html.ltms-reduced-motion *::before,
+html.ltms-reduced-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+html.ltms-high-contrast {
+  filter: contrast(1.12);
+}
+
+html.ltms-high-contrast button,
+html.ltms-high-contrast a,
+html.ltms-high-contrast input,
+html.ltms-high-contrast select,
+html.ltms-high-contrast textarea {
+  border-width: 2px !important;
+}
+
+html.ltms-dark-mode,
+html.ltms-dark-mode body,
+html.ltms-dark-mode #app {
+  background: #0f172a !important;
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .page {
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.98)),
+    url("./assets/BGC.jpg") center/cover no-repeat !important;
+}
+
+html.ltms-dark-mode .topbar {
+  background: linear-gradient(180deg, #0b2448 0%, #081a35 100%) !important;
+}
+
+html.ltms-dark-mode .section-card,
+html.ltms-dark-mode .sidebar-card,
+html.ltms-dark-mode .profile-card,
+html.ltms-dark-mode .service-card,
+html.ltms-dark-mode .recent-activity-card,
+html.ltms-dark-mode .help-card,
+html.ltms-dark-mode .news-panel,
+html.ltms-dark-mode .modal-card,
+html.ltms-dark-mode .terms-modal,
+html.ltms-dark-mode .settings-modal-card,
+html.ltms-dark-mode .logout-modal-card,
+html.ltms-dark-mode .quiz-card,
+html.ltms-dark-mode .quiz-summary-card,
+html.ltms-dark-mode .video-card,
+html.ltms-dark-mode .topic-nav-item,
+html.ltms-dark-mode .topic-content-card,
+html.ltms-dark-mode .summary-item,
+html.ltms-dark-mode .form-section {
+  background: #111c2f !important;
+  color: #e5edf7 !important;
+  border-color: #243449 !important;
+}
+
+html.ltms-dark-mode .card-title,
+html.ltms-dark-mode .section-card h2,
+html.ltms-dark-mode .sidebar-card h3,
+html.ltms-dark-mode .news-panel-head h3,
+html.ltms-dark-mode .activity-copy strong,
+html.ltms-dark-mode .help-card h3,
+html.ltms-dark-mode .topic-nav-copy strong,
+html.ltms-dark-mode .quiz-body h3,
+html.ltms-dark-mode .field span {
+  color: #f8fbff !important;
+}
+
+html.ltms-dark-mode .card-desc,
+html.ltms-dark-mode .section-card p,
+html.ltms-dark-mode .sidebar-card p,
+html.ltms-dark-mode .activity-copy span,
+html.ltms-dark-mode .help-card p,
+html.ltms-dark-mode .news-item-card p,
+html.ltms-dark-mode .topic-nav-copy span,
+html.ltms-dark-mode .section-subtext,
+html.ltms-dark-mode .quiz-summary-label,
+html.ltms-dark-mode .logout-modal-copy p,
+html.ltms-dark-mode .settings-option-copy span {
+  color: #b7c6d8 !important;
+}
+
+html.ltms-dark-mode input,
+html.ltms-dark-mode select,
+html.ltms-dark-mode textarea {
+  background: #0f172a !important;
+  color: #e5edf7 !important;
+  border-color: #314155 !important;
+}
+
+html.ltms-dark-mode .user-dropdown {
+  background: #111c2f !important;
+  border-color: #243449 !important;
+}
+
+html.ltms-dark-mode .user-dropdown-item {
+  color: #e5edf7 !important;
+}
+
+html.ltms-dark-mode .user-dropdown-item:hover {
+  background: #1a2a42 !important;
+  color: #ffffff !important;
+}
+
+html.ltms-dark-mode .settings-close-btn,
+html.ltms-dark-mode .logout-cancel-btn,
+html.ltms-dark-mode .terms-top-close {
+  background: #16243a !important;
+  color: #e5edf7 !important;
+  border-color: #314155 !important;
 }

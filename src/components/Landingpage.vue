@@ -1,276 +1,737 @@
+<script setup lang="ts">
+import logo from "../assets/logo.png";
+import bgImage from "../assets/BGC.jpg";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const showPassword = ref(false);
+const username = ref("");
+const password = ref("");
+const captchaInput = ref("");
+const rememberUsername = ref(false);
+
+const captchaCode = ref("");
+const captchaCanvas = ref<HTMLCanvasElement | null>(null);
+
+const errorModalOpen = ref(false);
+const errorTitle = ref("Login Error");
+const errorMessages = ref<string[]>([]);
+
+const mockAccounts = [
+  { username: "sampleuser@gmail.com", password: "Password@123" },
+  { username: "26-050525-2424960", password: "Driver@2025" },
+  { username: "ltoportal@gmail.com", password: "Portal#2025" },
+];
+
+const ltoNews = ref([
+  {
+    title: "LTO Portal Online Access",
+    date: "Digital Service",
+    text: "Access account services, appointments, and selected licensing transactions through the LTMS portal.",
+    image: bgImage,
+  },
+  {
+    title: "Driver's License Application Guidance",
+    date: "Citizen Advisory",
+    text: "Applicants are encouraged to review requirements and prepare complete documentation before proceeding to LTO offices.",
+    image: bgImage,
+  },
+  {
+    title: "Road Safety and Compliance",
+    date: "Public Reminder",
+    text: "LTO continues to promote safer roads through compliance, updated records, and responsible driving practices.",
+    image: bgImage,
+  },
+]);
+
+const ltoServices = ref([
+  "Driver's License Application and Renewal",
+  "Student Permit Processing",
+  "Vehicle Registration Transactions",
+  "Online Appointment Scheduling",
+  "Verification of Client Records",
+  "Road Safety Information Services",
+]);
+
+const featuredMedia = ref([
+  {
+    title: "LTO Public Information",
+    type: "photo",
+    subtitle: "Citizen-facing digital services",
+    text: "A more premium government landing page benefits from strong visual anchors, service summaries, and public advisories.",
+    image: bgImage,
+  },
+  {
+    title: "Online Transactions and Portal Access",
+    type: "photo",
+    subtitle: "Official digital service experience",
+    text: "Showcase access to portal services, account login, appointment booking, and information updates.",
+    image: bgImage,
+  },
+  {
+    title: "Transportation Safety and Compliance",
+    type: "photo",
+    subtitle: "Public road safety messaging",
+    text: "Use official-looking banner photography and clean overlays to make the page feel more institutional.",
+    image: bgImage,
+  },
+]);
+
+const ltoVideos = ref([
+  {
+    title: "LTO KONEK: Mga Kailangan sa Pagkuha ng Plaka",
+    embedUrl: "https://www.youtube-nocookie.com/embed/KL_m3n8C0k4",
+    category: "Official Video",
+  },
+  {
+    title: "Welcome to LTO KONEK",
+    embedUrl: "https://www.youtube-nocookie.com/embed/VVj5nW_X-nE",
+    category: "Official Video",
+  },
+  {
+    title: "Bago Magtungo sa Opisina ng LTO",
+    embedUrl: "https://www.youtube-nocookie.com/embed/olJhfjgLMG0",
+    category: "Official Guide",
+  },
+]);
+
+const isGmail = (value: string) => {
+  return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(value.trim());
+};
+
+const isLtoClientNumber = (value: string) => {
+  return /^\d{2}-\d{6}-\d{7}$/.test(value.trim());
+};
+
+const usernameHint = computed(() => {
+  if (!username.value) return "";
+  if (isGmail(username.value)) return "Detected Gmail account format";
+  if (isLtoClientNumber(username.value))
+    return "Detected LTO client number format";
+  return "Use a valid Gmail address or LTO client number";
+});
+
+const passwordChecks = computed(() => {
+  const value = password.value;
+  return {
+    minLength: value.length >= 8,
+    firstUppercase: /^[A-Z]/.test(value),
+    hasNumber: /\d/.test(value),
+    hasSpecial: /[!@#$%^&*()_\-+=[\]{};:'",.<>/?\\|`~]/.test(value),
+  };
+});
+
+function randomFrom(chars: string) {
+  return chars[Math.floor(Math.random() * chars.length)];
+}
+
+function generateCaptcha() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  for (let i = 0; i < 5; i += 1) result += randomFrom(chars);
+  captchaCode.value = result;
+  drawCaptcha();
+}
+
+function drawCaptcha() {
+  const canvas = captchaCanvas.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#f7f7f7");
+  gradient.addColorStop(0.5, "#ececec");
+  gradient.addColorStop(1, "#e2e2e2");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  for (let i = 0; i < 28; i += 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(${120 + Math.random() * 70}, ${120 + Math.random() * 70}, ${120 + Math.random() * 70}, 0.18)`;
+    ctx.lineWidth = Math.random() * 1.2 + 0.4;
+    ctx.moveTo(Math.random() * width, Math.random() * height);
+    ctx.lineTo(Math.random() * width, Math.random() * height);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 120; i += 1) {
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(${110 + Math.random() * 90}, ${110 + Math.random() * 90}, ${110 + Math.random() * 90}, 0.12)`;
+    ctx.arc(
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * 1.6,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  const chars = captchaCode.value.split("");
+  const section = width / (chars.length + 1);
+
+  chars.forEach((char, index) => {
+    const x = section * (index + 1);
+    const y = height / 2 + 10 + (Math.random() * 10 - 5);
+    const rotation = Math.random() * 0.5 - 0.25;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.font = `${52 + Math.floor(Math.random() * 8)}px Arial Black`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = index % 2 === 0 ? "#be1e2d" : "#d23232";
+    ctx.shadowColor = "rgba(80,0,0,0.25)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 2;
+    ctx.fillText(char, 0, 0);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(120, 10, 10, 0.35)";
+    ctx.strokeText(char, 0, 0);
+    ctx.restore();
+  });
+
+  for (let i = 0; i < 3; i += 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(70, 70, 70, 0.22)";
+    ctx.lineWidth = 1.2;
+    ctx.moveTo(0, Math.random() * height);
+    ctx.bezierCurveTo(
+      width * 0.3,
+      Math.random() * height,
+      width * 0.7,
+      Math.random() * height,
+      width,
+      Math.random() * height,
+    );
+    ctx.stroke();
+  }
+}
+
+function openErrorModal(title: string, messages: string[]) {
+  errorTitle.value = title;
+  errorMessages.value = messages;
+  errorModalOpen.value = true;
+}
+
+function closeErrorModal() {
+  errorModalOpen.value = false;
+}
+
+function validateUsername(value: string) {
+  const messages: string[] = [];
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    messages.push("Username is required.");
+    return messages;
+  }
+
+  if (!isGmail(trimmed) && !isLtoClientNumber(trimmed)) {
+    messages.push(
+      "Enter either a valid Gmail address or a valid LTO client number.",
+    );
+    messages.push(
+      "LTO client number format must look like: 26-050525-2424960.",
+    );
+  }
+
+  return messages;
+}
+
+function validatePassword(value: string) {
+  const messages: string[] = [];
+
+  if (!value) {
+    messages.push("Password is required.");
+    return messages;
+  }
+  if (value.length < 8)
+    messages.push("Password must be at least 8 characters long.");
+  if (!/^[A-Z]/.test(value))
+    messages.push("Password must start with a capital letter.");
+  if (!/\d/.test(value))
+    messages.push("Password must include at least one number.");
+  if (!/[!@#$%^&*()_\-+=[\]{};:'\",.<>/?\\|`~]/.test(value)) {
+    messages.push("Password must include at least one special character.");
+  }
+
+  return messages;
+}
+
+function validateCaptcha() {
+  const messages: string[] = [];
+  const input = captchaInput.value.trim().toUpperCase();
+
+  if (!input) {
+    messages.push("Security code is required.");
+    return messages;
+  }
+
+  if (input !== captchaCode.value) {
+    messages.push("Security code does not match the CAPTCHA.");
+  }
+
+  return messages;
+}
+
+function handleLogin() {
+  const problems = [
+    ...validateUsername(username.value),
+    ...validatePassword(password.value),
+    ...validateCaptcha(),
+  ];
+
+  if (problems.length > 0) {
+    openErrorModal("Please correct the following", problems);
+    if (captchaInput.value.trim().toUpperCase() !== captchaCode.value) {
+      captchaInput.value = "";
+      generateCaptcha();
+    }
+    return;
+  }
+
+  const matchedAccount = mockAccounts.find(
+    (account) =>
+      account.username.toLowerCase() === username.value.trim().toLowerCase() &&
+      account.password === password.value,
+  );
+
+  if (!matchedAccount) {
+    openErrorModal("Invalid credentials", [
+      "The username and password do not match our mock records.",
+      "Try one of the demo accounts listed below the form.",
+    ]);
+    generateCaptcha();
+    captchaInput.value = "";
+    return;
+  }
+
+  router.push("/home");
+}
+
+onMounted(() => {
+  generateCaptcha();
+});
+</script>
+
 <template>
-  <div class="page">
+  <div
+    class="page"
+    :style="{
+      backgroundImage: `linear-gradient(rgba(239,244,250,0.76), rgba(239,244,250,0.80)), url(${bgImage})`,
+    }"
+  >
     <header class="topbar">
       <div class="topbar-left">
         <img class="brand-logo" :src="logo" alt="LTO Logo" />
-        <span class="brand-text">LTMS PORTAL</span>
+        <span class="brand-text">LTO PORTAL</span>
       </div>
 
       <nav class="topbar-nav">
-        <a href="#" class="nav-item">HOME</a>
-        <a href="#" class="nav-item">OFFICIAL WEBSITE</a>
-        <a href="#" class="nav-item">E-LEARNING</a>
-        <a href="#" class="nav-item">CONTACT</a>
-        <a href="#" class="nav-item">DASHBOARD</a>
-      </nav>
-
-      <div class="user-dropdown" @click="toggleMenu">
-        <div class="user-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle
-              cx="12"
-              cy="8"
-              r="3.5"
-              stroke="currentColor"
-              stroke-width="1.9"
-            />
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
-              d="M5 19c0-3.2 3.2-5.2 7-5.2s7 2 7 5.2"
-              stroke="currentColor"
-              stroke-width="1.9"
-              stroke-linecap="round"
+              d="M19 18a3 3 0 0 0 0-6h-1a6 6 0 1 0-11.6 1.8A3.5 3.5 0 0 0 7 21h12"
             />
           </svg>
-        </div>
-
-        <span class="user-id">ID: 26-050525-2424960</span>
-        <span class="dropdown-arrow" :class="{ open: open }">▾</span>
-
-        <div v-if="open" class="dropdown-menu" @click.stop>
-          <button type="button">Profile</button>
-          <button type="button">Settings</button>
-          <button type="button">Logout</button>
-        </div>
-      </div>
+          <span>LTO OFFICIAL WEBPAGE</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
+            <path d="M6.5 10.5V15L12 18l5.5-3v-4.5" />
+          </svg>
+          <span>E-LEARNING</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M7 5h3l1.5 3.2-1.9 1.9a13.5 13.5 0 0 0 4.3 4.3l1.9-1.9L19 14v3a1 1 0 0 1-1 1C10.8 18 6 13.2 6 7a1 1 0 0 1 1-1Z"
+            />
+          </svg>
+          <span>CONTACT</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.2" />
+            <path d="M5 19c0-3.4 3.2-5.4 7-5.4s7 2 7 5.4" />
+          </svg>
+          <span>REGISTER</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.2" />
+            <path d="M5 19c0-3.4 3.2-5.4 7-5.4s7 2 7 5.4" />
+          </svg>
+          <span>LOGIN</span>
+        </a>
+      </nav>
     </header>
 
-    <main class="hero">
-      <div class="hero-overlay"></div>
-
-      <div class="seal-watermark">
-        <img :src="logo" alt="LTO Watermark" />
-      </div>
-
-      <section class="licensing-modal">
-        <div class="modal-header">
-          <h1>
-            Land Transportation Office | Application
-            <br />
-            for Driver's License Classification
-          </h1>
-
-          <p class="client-id">Client Profile | ID: 26-050525-2424960</p>
-          <p class="instruction">Select your desired license to continue:</p>
+    <main class="hero-area">
+      <section class="login-panel">
+        <div class="seal-wrap">
+          <img :src="logo" alt="LTO Seal" class="seal-logo" />
         </div>
 
-        <div class="license-list">
-          <button
-            class="license-option"
-            :class="{ selected: selectedLicense === 'student' }"
-            @click="selectedLicense = 'student'"
-          >
-            <span class="radio-dot">
-              <span
-                v-if="selectedLicense === 'student'"
-                class="radio-fill"
-              ></span>
-            </span>
+        <div class="panel-body">
+          <div class="panel-kicker">Official Portal Access</div>
+          <h1>LTO PORTAL</h1>
+          <p class="subtitle">Land Transportation Management System</p>
 
-            <div class="option-icon option-icon-student">
-              <svg viewBox="0 0 64 64" aria-hidden="true">
-                <circle cx="19" cy="40" r="5" />
-                <circle cx="47" cy="40" r="5" />
-                <path
-                  d="M15 39l4-13h16l5 6h7c2.5 0 4 1.8 4 4v3"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M28 26v-7l8-5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                />
-              </svg>
+          <form class="login-form" @submit.prevent="handleLogin">
+            <div class="input-group">
+              <span class="input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="3.2" />
+                  <path d="M5 19c0-3.4 3.2-5.4 7-5.4s7 2 7 5.4" />
+                </svg>
+              </span>
+              <input
+                v-model="username"
+                type="text"
+                placeholder="EMAIL OR LTO CLIENT NUMBER"
+                autocomplete="username"
+              />
             </div>
 
-            <div class="option-copy">
-              <strong>STUDENT-DRIVER'S PERMIT</strong>
-              <span>Apply for a learn-to-drive permit.</span>
-            </div>
-          </button>
+            <p v-if="usernameHint" class="live-hint">{{ usernameHint }}</p>
 
-          <button
-            class="license-option"
-            :class="{ selected: selectedLicense === 'driver' }"
-            @click="selectedLicense = 'driver'"
-          >
-            <span class="radio-dot">
-              <span
-                v-if="selectedLicense === 'driver'"
-                class="radio-fill"
-              ></span>
-            </span>
-
-            <div class="option-icon option-icon-driver">
-              <svg viewBox="0 0 64 64" aria-hidden="true">
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="18"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                />
-                <circle cx="32" cy="32" r="4" />
-                <path
-                  d="M32 14v9M32 41v9M14 32h9M41 32h9M20 20l6 6M38 38l6 6M44 20l-6 6M26 38l-6 6"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </div>
-
-            <div class="option-copy">
-              <strong>DRIVER'S LICENSE</strong>
-              <span>Apply for a full, renewal, or new license.</span>
-            </div>
-          </button>
-
-          <button
-            class="license-option"
-            :class="{ selected: selectedLicense === 'conductor' }"
-            @click="selectedLicense = 'conductor'"
-          >
-            <span class="radio-dot">
-              <span
-                v-if="selectedLicense === 'conductor'"
-                class="radio-fill"
-              ></span>
-            </span>
-
-            <div class="option-icon option-icon-conductor">
-              <svg viewBox="0 0 64 64" aria-hidden="true">
-                <path
-                  d="M16 36c0-10 7-18 16-18s16 8 16 18"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                />
-                <path
-                  d="M18 36h28c4 0 7 3 7 7 0 2-1 4-3 5-6 3-31 3-37 0-2-1-3-3-3-5 0-4 3-7 8-7z"
-                  fill="currentColor"
-                  opacity=".95"
-                />
-                <rect x="23" y="14" width="18" height="6" rx="2" />
-                <path
-                  d="M24 24c2 2 5 3 8 3s6-1 8-3"
-                  fill="none"
-                  stroke="#ffffff"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </div>
-
-            <div class="option-copy">
-              <strong>CONDUCTOR'S LICENSE</strong>
-              <span>Apply for a public transport operator license.</span>
-            </div>
-          </button>
-
-          <label class="upload-option">
-            <div class="upload-left">
-              <div class="upload-icon">
-                <svg viewBox="0 0 64 64" aria-hidden="true">
+            <div class="input-group">
+              <span class="input-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
                   <path
-                    d="M22 10h15l9 9v35H22z"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linejoin="round"
+                    d="M7 11V8.8A4.8 4.8 0 0 1 11.8 4h.4A4.8 4.8 0 0 1 17 8.8V11"
                   />
+                  <rect x="6" y="11" width="12" height="9" rx="2" />
+                  <circle cx="12" cy="15.5" r="1.1" />
+                </svg>
+              </span>
+
+              <input
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="PASSWORD"
+                autocomplete="current-password"
+              />
+
+              <button
+                type="button"
+                class="password-toggle"
+                @click="showPassword = !showPassword"
+                aria-label="Toggle password visibility"
+              >
+                <svg
+                  v-if="!showPassword"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                  <circle cx="12" cy="12" r="2.8" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 3l18 18" />
                   <path
-                    d="M37 10v9h9"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M32 44V28M26 34l6-6 6 6"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    d="M2 12s3.5-6 10-6c2.1 0 3.9.6 5.4 1.6M22 12s-3.5 6-10 6c-2.1 0-3.9-.6-5.4-1.6"
                   />
                 </svg>
-              </div>
-
-              <div class="option-copy upload-copy">
-                <strong>
-                  ADD FILE |
-                  <span>[Drop File or Click to Upload]</span>
-                </strong>
-                <span>Add Medical Certificate (Optional for this step)</span>
-              </div>
+              </button>
             </div>
 
-            <input type="file" class="file-input" />
-          </label>
-        </div>
+            <div class="password-rules">
+              <span :class="{ ok: passwordChecks.firstUppercase }"
+                >Starts with capital letter</span
+              >
+              <span :class="{ ok: passwordChecks.hasNumber }">Has number</span>
+              <span :class="{ ok: passwordChecks.hasSpecial }"
+                >Has special character</span
+              >
+              <span :class="{ ok: passwordChecks.minLength }"
+                >At least 8 characters</span
+              >
+            </div>
 
-        <div class="modal-actions">
-          <button class="btn-cancel">Cancel &amp; Exit</button>
-          <button class="btn-proceed">PROCEED ›</button>
+            <div class="captcha-box">
+              <canvas
+                ref="captchaCanvas"
+                width="265"
+                height="92"
+                aria-label="Security code"
+              ></canvas>
+            </div>
+
+            <button type="button" class="refresh-code" @click="generateCaptcha">
+              refresh security code
+            </button>
+
+            <div class="input-group">
+              <span class="input-icon hash-icon" aria-hidden="true">#</span>
+              <input
+                v-model="captchaInput"
+                type="text"
+                placeholder="SECURITY CODE (ABOVE)"
+              />
+            </div>
+
+            <div class="form-meta">
+              <label class="remember-me">
+                <input v-model="rememberUsername" type="checkbox" />
+                <span>Remember Username</span>
+              </label>
+              <a href="#" class="forgot-link">Forgot Password</a>
+            </div>
+
+            <button type="submit" class="login-btn">LOGIN</button>
+          </form>
+
+          <div class="demo-accounts">
+            <p class="demo-title">Mock accounts for testing</p>
+            <ul>
+              <li><strong>sampleuser@gmail.com</strong> / Password@123</li>
+              <li><strong>26-050525-2424960</strong> / Driver@2025</li>
+              <li><strong>ltoportal@gmail.com</strong> / Portal#2025</li>
+            </ul>
+          </div>
         </div>
       </section>
+
+      <div class="mid-badge">
+        <img :src="logo" alt="LTO Logo" />
+        <div>
+          <strong>MANAGEMENT</strong>
+          <strong>INFORMATION</strong>
+          <strong>DIVISION (MID)</strong>
+        </div>
+      </div>
     </main>
 
-    <footer class="footer">
-      <div class="footer-left">Release 2.5.4</div>
-      <div class="footer-center">
-        <img class="footer-logo" :src="logo" alt="LTO Logo" />
-        <span>MANAGEMENT INFORMATION DIVISION (MID)</span>
+    <section class="info-section">
+      <div class="info-container">
+        <div class="section-heading">
+          <span class="section-kicker">Public Information</span>
+          <h2>Official Information, Media, and Online Services</h2>
+          <p>
+            Explore core LTO services, public reminders, media highlights, and
+            official video guides in a more polished government-style
+            information layout.
+          </p>
+        </div>
+
+        <div class="highlight-band">
+          <div class="highlight-card">
+            <div class="highlight-icon">24/7</div>
+            <div>
+              <strong>Online Access</strong>
+              <span>Portal-first government services for citizens</span>
+            </div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon">ID</div>
+            <div>
+              <strong>Records & Verification</strong>
+              <span>Access client and transaction information securely</span>
+            </div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-icon">RS</div>
+            <div>
+              <strong>Road Safety</strong>
+              <span>Public advisories and responsible transport guidance</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-grid premium-grid">
+          <article class="info-card about-card">
+            <div class="card-header">
+              <h3>About LTO</h3>
+            </div>
+            <p>
+              The Land Transportation Office is responsible for driver
+              licensing, vehicle registration, law enforcement support, and
+              public road transport regulation. A premium government landing
+              page should communicate trust, clarity, and public service value
+              immediately.
+            </p>
+            <ul class="bullet-list">
+              <li>Promotes safer and more responsible driving</li>
+              <li>Supports digital government transaction services</li>
+              <li>Improves access to licensing and registration records</li>
+              <li>Provides service advisories and transport information</li>
+            </ul>
+          </article>
+
+          <article class="info-card services-card">
+            <div class="card-header">
+              <h3>Online Services</h3>
+            </div>
+            <ul class="service-list">
+              <li v-for="service in ltoServices" :key="service">
+                <span class="service-dot"></span>
+                <span>{{ service }}</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="media-gallery">
+          <article
+            v-for="item in featuredMedia"
+            :key="item.title"
+            class="media-photo-card"
+          >
+            <div
+              class="media-photo"
+              :style="{
+                backgroundImage: `linear-gradient(rgba(12,37,79,0.18), rgba(12,37,79,0.46)), url(${item.image})`,
+              }"
+            >
+              <span class="media-chip">{{ item.type }}</span>
+            </div>
+            <div class="media-copy">
+              <span class="media-subtitle">{{ item.subtitle }}</span>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.text }}</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="info-grid lower-grid">
+          <article class="info-card news-card">
+            <div class="card-header">
+              <h3>Latest News & Announcements</h3>
+            </div>
+            <div class="news-list">
+              <div v-for="item in ltoNews" :key="item.title" class="news-item">
+                <div
+                  class="news-thumb"
+                  :style="{
+                    backgroundImage: `linear-gradient(rgba(11,74,178,0.12), rgba(11,74,178,0.28)), url(${item.image})`,
+                  }"
+                ></div>
+                <div class="news-content">
+                  <div class="news-meta">{{ item.date }}</div>
+                  <h4>{{ item.title }}</h4>
+                  <p>{{ item.text }}</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-card reminders-card">
+            <div class="card-header">
+              <h3>Important Reminders</h3>
+            </div>
+            <ul class="bullet-list">
+              <li>Prepare valid identification and supporting documents.</li>
+              <li>Review portal entries carefully before submitting forms.</li>
+              <li>Keep your client number and registered email secure.</li>
+              <li>
+                Verify schedules and service advisories before visiting an
+                office.
+              </li>
+              <li>
+                Use only official LTO channels for transactions and updates.
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="video-section">
+          <div class="card-header video-header">
+            <h3>Official Video Guides</h3>
+            <p>
+              Embed official LTO video explainers to make the page more useful
+              and credible.
+            </p>
+          </div>
+
+          <div class="video-grid">
+            <article
+              v-for="video in ltoVideos"
+              :key="video.title"
+              class="video-card"
+            >
+              <div class="video-frame">
+                <iframe
+                  :src="video.embedUrl"
+                  :title="video.title"
+                  loading="lazy"
+                  allow="
+                    accelerometer;
+                    autoplay;
+                    clipboard-write;
+                    encrypted-media;
+                    gyroscope;
+                    picture-in-picture;
+                  "
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div class="video-copy">
+                <span class="video-badge">{{ video.category }}</span>
+                <h4>{{ video.title }}</h4>
+              </div>
+            </article>
+          </div>
+        </div>
       </div>
-      <div class="footer-right">✦</div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-container">
+        <div class="footer-brand">
+          <img :src="logo" alt="LTO Logo" />
+          <div>
+            <strong>LTO PORTAL</strong>
+            <span>Land Transportation Management System</span>
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <a href="#">About LTO</a>
+          <a href="#">Announcements</a>
+          <a href="#">Online Services</a>
+          <a href="#">Contact Information</a>
+        </div>
+      </div>
     </footer>
+
+    <div v-if="errorModalOpen" class="modal-overlay" @click="closeErrorModal">
+      <div class="error-modal" @click.stop>
+        <div class="error-modal-header">
+          <div class="error-icon">!</div>
+          <div>
+            <h3>{{ errorTitle }}</h3>
+            <p>Please review the fields below.</p>
+          </div>
+        </div>
+
+        <ul class="error-list">
+          <li v-for="(message, index) in errorMessages" :key="index">
+            {{ message }}
+          </li>
+        </ul>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn" @click="closeErrorModal">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import logo from "../assets/logo.png";
-
-const selectedLicense = ref("driver");
-const open = ref(false);
-
-const toggleMenu = () => {
-  open.value = !open.value;
-};
-
-const closeMenu = (event: MouseEvent) => {
-  const target = event.target as HTMLElement | null;
-  if (!target?.closest(".user-dropdown")) {
-    open.value = false;
-  }
-};
-
-onMounted(() => {
-  document.addEventListener("click", closeMenu);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener("click", closeMenu);
-});
-</script>
 
 <style scoped>
 * {
@@ -284,495 +745,1041 @@ onBeforeUnmount(() => {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+:global(body) {
+  background: #e7edf5;
+  color: #1e2a38;
+}
+
 .page {
   min-height: 100vh;
-  background: #edf1f4;
   display: flex;
   flex-direction: column;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .topbar {
-  height: 72px;
-  background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
-  color: #fff;
+  height: 78px;
+  background: linear-gradient(180deg, #0b4ab2 0%, #083c95 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 18px rgba(9, 42, 98, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
-  box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
-  z-index: 5;
+  padding: 0 28px;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   object-fit: cover;
-  background: white;
+  border-radius: 50%;
+  flex: 0 0 40px;
 }
 
 .brand-text {
-  font-size: 26px;
+  color: #ffffff;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0.3px;
 }
 
 .topbar-nav {
   display: flex;
-  gap: 18px;
   align-items: center;
+  gap: 30px;
 }
 
 .nav-item {
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.96);
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.user-dropdown {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  cursor: pointer;
-  user-select: none;
-  min-width: 210px;
-  justify-content: flex-end;
-}
-
-.user-icon {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  opacity: 0.95;
-  flex: 0 0 30px;
-}
-
-.user-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.user-id {
   font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.35px;
   white-space: nowrap;
 }
 
-.dropdown-arrow {
-  font-size: 12px;
-  line-height: 1;
-  transition: transform 0.18s ease;
+.nav-item svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.95;
 }
 
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: 150px;
-  background: #ffffff;
-  color: #1f2937;
-  border-radius: 10px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
-  overflow: hidden;
-  z-index: 20;
-  border: 1px solid rgba(17, 24, 39, 0.08);
-}
-
-.dropdown-menu button {
-  width: 100%;
-  padding: 11px 12px;
-  border: none;
-  background: none;
-  text-align: left;
-  font-size: 13px;
-  color: #1f2937;
-  cursor: pointer;
-}
-
-.dropdown-menu button:hover {
-  background: #f3f6fb;
-}
-
-.hero {
-  flex: 1;
+.hero-area {
   position: relative;
-  background:
-    linear-gradient(rgba(244, 246, 249, 0.52), rgba(244, 246, 249, 0.62)),
-    url("../assets/BGC.jpg") center/cover no-repeat;
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 38px 24px 28px;
+  padding: 52px 20px 56px;
+}
+
+.login-panel {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(
+    180deg,
+    rgba(250, 250, 250, 0.97) 0%,
+    rgba(239, 239, 239, 0.97) 100%
+  );
+  border-radius: 18px;
+  box-shadow:
+    0 22px 48px rgba(57, 76, 102, 0.2),
+    0 3px 8px rgba(57, 76, 102, 0.08);
+  border: 1px solid rgba(205, 214, 226, 0.95);
+  padding-top: 58px;
+  overflow: visible;
+}
+
+.seal-wrap {
+  position: absolute;
+  top: -66px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 156px;
+  height: 156px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seal-logo {
+  width: 156px;
+  height: 156px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.1));
+}
+
+.panel-body {
+  padding: 62px 34px 30px;
+  text-align: center;
+}
+
+.panel-kicker {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(11, 74, 178, 0.08);
+  color: #0b4ab2;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+
+.panel-body h1 {
+  margin: 0;
+  color: #14459a;
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  margin: 12px 0 28px;
+  color: #445c7b;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.input-group {
+  height: 48px;
+  background: #f8f8f8;
+  border: 1px solid #ccd2da;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  width: 48px;
+  height: 100%;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #747474;
+  border-right: 1px solid #d7d7d7;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.input-icon svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hash-icon {
+  font-size: 31px;
+  font-weight: 400;
+  line-height: 1;
+  color: #666666;
+}
+
+.input-group input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0 14px;
+  font-size: 13px;
+  color: #404040;
+  letter-spacing: 0.3px;
+}
+
+.input-group input::placeholder {
+  color: #8d8d8d;
+  opacity: 1;
+}
+
+.password-toggle {
+  width: 48px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  border-left: 1px solid #d7d7d7;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #6d6d6d;
+}
+
+.password-toggle svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.live-hint {
+  margin: -4px 2px 0;
+  text-align: left;
+  font-size: 12px;
+  color: #597298;
+}
+
+.password-rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  text-align: left;
+}
+
+.password-rules span {
+  font-size: 11px;
+  color: #7a8591;
+  padding-left: 14px;
+  position: relative;
+}
+
+.password-rules span::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #9ba8b4;
+}
+
+.password-rules span.ok {
+  color: #1b7a38;
+  font-weight: 700;
+}
+
+.password-rules span.ok::before {
+  content: "✓";
+  color: #1b7a38;
+}
+
+.captcha-box {
+  width: 265px;
+  max-width: 100%;
+  height: 92px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.03) 0, transparent 32%),
+    radial-gradient(circle at 80% 60%, rgba(0, 0, 0, 0.04) 0, transparent 30%),
+    linear-gradient(180deg, #ededed 0%, #e5e5e5 100%);
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  pointer-events: none;
-}
-
-.seal-watermark {
-  position: absolute;
-  left: 30px;
-  top: 34px;
-  width: 300px;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-.seal-watermark img {
+.captcha-box canvas {
   width: 100%;
+  height: 100%;
   display: block;
-  filter: grayscale(100%);
 }
 
-.licensing-modal {
-  position: relative;
-  z-index: 2;
-  width: min(760px, 94%);
-  background: linear-gradient(180deg, #fdfdfd 0%, #f3f3f3 100%);
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 18px;
-  box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.24),
-    0 3px 8px rgba(0, 0, 0, 0.12);
-  padding: 22px 24px 20px;
-}
-
-.modal-header h1 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 1.16;
-  font-weight: 800;
-  color: #262626;
-}
-
-.client-id {
-  margin: 12px 0 0;
+.refresh-code {
+  margin: -2px auto 4px;
+  border: 0;
+  background: transparent;
+  color: #395988;
   font-size: 14px;
-  color: #4b4b4b;
+  cursor: pointer;
+}
+
+.form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.remember-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #575757;
+  cursor: pointer;
+}
+
+.remember-me input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.forgot-link {
+  color: #506c9d;
+  text-decoration: none;
+  font-size: 14px;
   font-weight: 600;
 }
 
-.instruction {
-  margin: 16px 0 14px;
-  font-size: 16px;
-  color: #404040;
-}
-
-.license-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.license-option {
-  width: 100%;
-  border: 1px solid #d3d6da;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #f3f3f3 0%, #ececec 100%);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.license-option:hover {
-  border-color: #98bfe0;
-}
-
-.license-option.selected {
-  border-color: #6fb3e8;
-  background: linear-gradient(180deg, #eef8ff 0%, #e6f4ff 100%);
-  box-shadow:
-    0 0 0 2px rgba(76, 163, 226, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.radio-dot {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #a1a7af;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex: 0 0 18px;
-  background: #fff;
-}
-
-.selected .radio-dot {
-  border-color: #49a8e7;
-}
-
-.radio-fill {
-  width: 8px;
-  height: 8px;
-  background: #49a8e7;
-  border-radius: 50%;
-}
-
-.option-icon {
-  width: 38px;
-  height: 38px;
-  color: #51606d;
-  flex: 0 0 38px;
-}
-
-.option-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.option-icon-driver {
-  color: #475569;
-}
-
-.option-icon-student {
-  color: #5d7487;
-}
-
-.option-icon-conductor {
-  color: #54606f;
-}
-
-.option-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.option-copy strong {
-  font-size: 15px;
-  line-height: 1.15;
-  color: #2f2f2f;
-}
-
-.option-copy span {
-  font-size: 13px;
-  color: #555;
-  line-height: 1.25;
-}
-
-.upload-option {
-  border: 1px solid #d3d6da;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #f5f5f5 0%, #ededed 100%);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.upload-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.upload-icon {
-  width: 30px;
-  height: 30px;
-  color: #6b7280;
-  flex: 0 0 30px;
-}
-
-.upload-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.upload-copy strong {
-  font-size: 15px;
-}
-
-.upload-copy strong span {
-  font-weight: 700;
-  color: #444;
-}
-
-.file-input {
-  display: none;
-}
-
-.modal-actions {
-  margin-top: 18px;
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.btn-cancel,
-.btn-proceed {
-  border: none;
+.login-btn {
+  height: 52px;
+  border: 0;
   border-radius: 8px;
-  height: 40px;
-  padding: 0 22px;
-  font-size: 14px;
+  background: linear-gradient(180deg, #0c49b4 0%, #073b98 100%);
+  color: #ffffff;
+  font-size: 17px;
   font-weight: 800;
+  letter-spacing: 0.2px;
   cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 6px 14px rgba(8, 58, 145, 0.22);
 }
 
-.btn-cancel {
-  background: linear-gradient(180deg, #f53f56 0%, #cf1831 100%);
-  color: white;
-  box-shadow: 0 6px 14px rgba(207, 24, 49, 0.22);
+.demo-accounts {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: rgba(17, 69, 154, 0.05);
+  border: 1px solid rgba(17, 69, 154, 0.12);
+  border-radius: 10px;
+  text-align: left;
 }
 
-.btn-proceed {
-  background: linear-gradient(180deg, #2a8ad9 0%, #1f6fbe 100%);
-  color: white;
-  margin-left: auto;
-  box-shadow: 0 6px 14px rgba(31, 111, 190, 0.22);
+.demo-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #17488f;
 }
 
-.footer {
-  height: 62px;
-  background: #0a3779;
+.demo-accounts ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.demo-accounts li {
+  font-size: 12px;
+  color: #4e5c6d;
+  line-height: 1.55;
+}
+
+.mid-badge {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 18px;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.85); /* brighter */
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(11, 74, 178, 0.15);
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.mid-badge img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+.mid-badge div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.03;
+}
+
+.mid-badge strong {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+
+  color: #0b4ab2; /* LTO BLUE */
+}
+
+.info-section {
+  background: linear-gradient(180deg, #f3f7fb 0%, #ebf1f7 100%);
+  border-top: 1px solid rgba(181, 196, 214, 0.55);
+  padding: 64px 24px 72px;
+}
+
+.info-container {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+.section-heading {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 34px;
+}
+
+.section-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(11, 74, 178, 0.08);
+  color: #0b4ab2;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.section-heading h2 {
+  margin: 0 0 12px;
+  color: #123f8e;
+  font-size: 36px;
+  line-height: 1.15;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #51657f;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.highlight-band {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.highlight-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(188, 203, 221, 0.88);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 10px 22px rgba(66, 90, 122, 0.06);
+}
+
+.highlight-card strong {
+  display: block;
+  color: #163d7b;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.highlight-card span {
+  color: #5c6f84;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.highlight-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #0b4ab2 0%, #083b94 100%);
   color: #fff;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 0 20px;
-  font-size: 12px;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 800;
+  flex: 0 0 52px;
 }
 
-.footer-left {
-  justify-self: start;
-  font-weight: 600;
+.info-grid {
+  display: grid;
+  gap: 22px;
 }
 
-.footer-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
+.premium-grid {
+  grid-template-columns: 1.05fr 0.95fr;
+  margin-bottom: 24px;
 }
 
-.footer-logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.lower-grid {
+  grid-template-columns: 1.1fr 0.9fr;
+  margin-top: 24px;
 }
 
-.footer-right {
-  justify-self: end;
+.info-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(190, 203, 220, 0.88);
+  border-radius: 18px;
+  padding: 24px 24px 22px;
+  box-shadow: 0 12px 28px rgba(66, 90, 122, 0.08);
+}
+
+.card-header {
+  margin-bottom: 14px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #153d7b;
   font-size: 22px;
 }
 
-@media (max-width: 1000px) {
+.about-card p {
+  margin: 0 0 16px;
+  color: #55697f;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.bullet-list li {
+  margin-bottom: 10px;
+  color: #51657b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.service-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.service-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(219, 228, 239, 0.8);
+  color: #4f637b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.service-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.service-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #0b4ab2;
+  flex: 0 0 9px;
+}
+
+.media-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.media-photo-card {
+  overflow: hidden;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(190, 203, 220, 0.88);
+  box-shadow: 0 12px 28px rgba(66, 90, 122, 0.08);
+}
+
+.media-photo {
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.media-chip {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #123f8e;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.media-copy {
+  padding: 18px;
+}
+
+.media-subtitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  color: #0b4ab2;
+  margin-bottom: 8px;
+}
+
+.media-copy h3 {
+  margin: 0 0 8px;
+  color: #22384f;
+  font-size: 19px;
+}
+
+.media-copy p {
+  margin: 0;
+  color: #617387;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(219, 228, 239, 0.85);
+}
+
+.news-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.news-thumb {
+  min-height: 86px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+}
+
+.news-meta {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0b4ab2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.news-item h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #243a54;
+}
+
+.news-item p {
+  margin: 0;
+  font-size: 14px;
+  color: #5b6e83;
+  line-height: 1.6;
+}
+
+.video-section {
+  margin-top: 28px;
+  padding: 28px;
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(247, 250, 253, 0.92) 100%
+  );
+  border: 1px solid rgba(190, 203, 220, 0.88);
+  box-shadow: 0 12px 28px rgba(66, 90, 122, 0.08);
+}
+
+.video-header {
+  margin-bottom: 18px;
+}
+
+.video-header p {
+  margin: 8px 0 0;
+  color: #5d7086;
+  font-size: 14px;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.video-card {
+  background: #fff;
+  border: 1px solid rgba(212, 221, 232, 0.95);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.video-frame {
+  position: relative;
+  padding-top: 56.25%;
+  background: #dbe7f6;
+}
+
+.video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-copy {
+  padding: 16px;
+}
+
+.video-badge {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(11, 74, 178, 0.08);
+  color: #0b4ab2;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.video-copy h4 {
+  margin: 0;
+  color: #243a54;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.site-footer {
+  background: #0c2f6f;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 24px;
+}
+
+.footer-container {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+}
+
+.footer-brand img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.footer-brand div {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-brand strong {
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.footer-brand span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.84);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 999;
+}
+
+.error-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  overflow: hidden;
+}
+
+.error-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 22px 14px;
+  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  border-bottom: 1px solid #f0d4d4;
+}
+
+.error-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  background: #d93025;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.error-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #7a1c1c;
+}
+
+.error-modal-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.error-list {
+  margin: 0;
+  padding: 18px 24px 8px 42px;
+}
+
+.error-list li {
+  margin-bottom: 10px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.modal-actions {
+  padding: 0 22px 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  min-width: 92px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #0c49b4;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 1180px) {
+  .highlight-band,
+  .media-gallery,
+  .video-grid,
+  .premium-grid,
+  .lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .news-item {
+    grid-template-columns: 1fr;
+  }
+
+  .news-thumb {
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 1100px) {
   .topbar {
     height: auto;
     flex-direction: column;
     gap: 12px;
-    padding: 12px;
+    padding: 14px 18px;
   }
 
   .topbar-nav {
     flex-wrap: wrap;
     justify-content: center;
-  }
-
-  .user-dropdown {
-    min-width: auto;
+    gap: 16px 24px;
   }
 }
 
-@media (max-width: 760px) {
-  .seal-watermark {
-    width: 220px;
-    left: 10px;
-    top: 70px;
+@media (max-width: 700px) {
+  .hero-area {
+    align-items: flex-start;
+    padding-top: 80px;
   }
 
-  .licensing-modal {
-    width: min(96%, 760px);
-    padding: 18px 16px;
+  .login-panel {
+    max-width: 100%;
   }
 
-  .modal-header h1 {
-    font-size: 20px;
+  .panel-body {
+    padding: 56px 20px 24px;
   }
 
-  .instruction {
-    font-size: 14px;
+  .panel-body h1 {
+    font-size: 40px;
   }
 
-  .option-copy strong,
-  .upload-copy strong {
-    font-size: 14px;
+  .subtitle {
+    font-size: 15px;
+    margin-bottom: 22px;
   }
 
-  .option-copy span {
-    font-size: 12px;
+  .captcha-box {
+    height: 82px;
   }
 
-  .modal-actions {
+  .form-meta {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .btn-cancel,
-  .btn-proceed {
-    width: 100%;
-    margin-left: 0;
+  .password-rules {
+    grid-template-columns: 1fr;
+  }
+
+  .mid-badge {
+    display: none;
+  }
+
+  .section-heading h2 {
+    font-size: 28px;
+  }
+
+  .footer-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .video-section {
+    padding: 18px;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 520px) {
   .brand-text {
-    font-size: 20px;
+    font-size: 18px;
   }
 
-  .user-id {
+  .nav-item {
     font-size: 11px;
   }
 
-  .footer {
-    grid-template-columns: 1fr;
-    height: auto;
-    gap: 6px;
-    padding: 12px;
-    text-align: center;
+  .seal-wrap,
+  .seal-logo {
+    width: 124px;
+    height: 124px;
   }
 
-  .footer-left,
-  .footer-center,
-  .footer-right {
-    justify-self: center;
+  .seal-wrap {
+    top: -54px;
+  }
+
+  .panel-body h1 {
+    font-size: 34px;
+  }
+
+  .info-section {
+    padding: 42px 16px 48px;
+  }
+
+  .info-card,
+  .video-card,
+  .media-photo-card {
+    border-radius: 14px;
   }
 }
 </style>

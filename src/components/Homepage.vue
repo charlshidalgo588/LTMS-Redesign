@@ -1,47 +1,84 @@
 <template>
   <div class="page">
+    <div
+      v-if="isPageLoading"
+      class="page-loading-overlay"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="page-loading-card">
+        <span class="page-loading-spinner"></span>
+        <span class="page-loading-text">Loading page...</span>
+      </div>
+    </div>
+
     <header class="topbar">
       <div class="topbar-left">
-        <img class="brand-logo" :src="logo" alt="LTO Logo" />
-        <span class="brand-text">LTO PORTAL</span>
+        <button class="brand-wrap" type="button" @click="goToDashboard">
+          <img class="brand-logo" :src="logo" alt="LTO Logo" />
+          <div class="brand-copy">
+            <span class="brand-kicker">LTMS PORTAL</span>
+            <span class="brand-text">DASHBOARD</span>
+          </div>
+        </button>
       </div>
 
       <nav class="topbar-nav">
-        <a href="#" class="nav-item">OFFICIAL WEBSITE</a>
-        <a href="#" class="nav-item" @click.prevent="goToELearning"
-          >E-LEARNING</a
+        <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
+          LTO OFFICIAL WEBPAGE
+        </a>
+        <a href="#" class="nav-item" @click.prevent="goToELearning">
+          E-LEARNING
+        </a>
+        <a href="#" class="nav-item" @click.prevent="goToContact">CONTACT</a>
+        <a
+          href="#"
+          class="nav-item active dashboard-active"
+          @click.prevent="goToDashboard"
         >
-        <a href="#" class="nav-item">CONTACT</a>
-        <a href="#" class="nav-item">DASHBOARD</a>
+          DASHBOARD
+        </a>
       </nav>
 
-      <div class="user-dropdown" @click="toggleMenu">
-        <div class="user-icon">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle
-              cx="12"
-              cy="8"
-              r="4"
-              stroke="currentColor"
-              stroke-width="2"
-            />
+      <div ref="userMenuRef" class="user-menu">
+        <button class="user-menu-trigger" type="button" @click="toggleUserMenu">
+          <div class="user-avatar">H</div>
+          <div class="user-info">
+            <span class="user-name">HIDALGO</span>
+            <span class="user-id">26-050525-2424960</span>
+          </div>
+          <svg class="user-caret" viewBox="0 0 24 24" aria-hidden="true">
             <path
-              d="M4 20c0-4 4-6 8-6s8 2 8 6"
+              d="M6 9l6 6 6-6"
+              fill="none"
               stroke="currentColor"
               stroke-width="2"
               stroke-linecap="round"
+              stroke-linejoin="round"
             />
           </svg>
-        </div>
+        </button>
 
-        <span class="user-id">ID: 26-050525-2424960</span>
+        <div v-if="showUserMenu" class="user-dropdown">
+          <button type="button" class="user-dropdown-item" @click="goToProfile">
+            Profile
+          </button>
 
-        <span class="dropdown-arrow">▾</span>
+          <button
+            type="button"
+            class="user-dropdown-item"
+            @click="openSettingsModal"
+          >
+            Settings
+          </button>
 
-        <div v-if="open" class="dropdown-menu">
-          <button>Profile</button>
-          <button>Settings</button>
-          <button>Logout</button>
+          <button
+            type="button"
+            class="user-dropdown-item danger"
+            @click="requestLogout"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </header>
@@ -84,7 +121,11 @@
             <div class="card-title">DIGITAL ID</div>
             <div class="card-desc">Status: Active</div>
 
-            <button class="view-btn" @click="showIdModal = true">
+            <button
+              class="view-btn"
+              :disabled="isPageLoading"
+              @click="showIdModal = true"
+            >
               View Full ID
             </button>
           </article>
@@ -93,6 +134,7 @@
             v-for="card in cards"
             :key="card.title"
             class="service-card clickable-card"
+            :class="{ loadingDisabled: isPageLoading }"
             @click="goToCard(card.title)"
           >
             <div class="card-top-media">
@@ -114,98 +156,30 @@
           <div class="recent-activity-card">
             <div class="section-head">
               <h3>Recent Activity</h3>
-              <a href="#" class="view-all-link">View All</a>
+              <a
+                href="#"
+                class="view-all-link"
+                @click.prevent="openRecentActivityModal"
+                >View All</a
+              >
             </div>
 
             <div class="activity-list">
-              <button type="button" class="activity-item">
-                <div class="activity-icon">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <rect
-                      x="3"
-                      y="7"
-                      width="18"
-                      height="10"
-                      rx="2"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <circle
-                      cx="7.5"
-                      cy="17"
-                      r="1.5"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <circle
-                      cx="16.5"
-                      cy="17"
-                      r="1.5"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <path
-                      d="M6 7l2-3h8l2 3"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </div>
+              <button
+                v-for="activity in recentActivities.slice(0, 2)"
+                :key="activity.id"
+                type="button"
+                class="activity-item"
+              >
+                <div class="activity-icon" v-html="activity.icon"></div>
 
                 <div class="activity-copy">
-                  <strong>Driver License Renewal</strong>
-                  <span>Applied for Drivers License Renewal</span>
+                  <strong>{{ activity.title }}</strong>
+                  <span>{{ activity.description }}</span>
                 </div>
 
                 <div class="activity-meta">
-                  <small>5 days ago</small>
-                  <span class="activity-arrow">›</span>
-                </div>
-              </button>
-
-              <button type="button" class="activity-item">
-                <div class="activity-icon">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <rect
-                      x="4"
-                      y="3"
-                      width="10"
-                      height="18"
-                      rx="2"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <path
-                      d="M8 7h2M8 11h2M8 15h2"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                    <circle
-                      cx="18"
-                      cy="15"
-                      r="3.5"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <path
-                      d="M20.5 17.5l2 2"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </div>
-
-                <div class="activity-copy">
-                  <strong>Viewed Defensive Driving Course</strong>
-                  <span>Completed Driver Online Course</span>
-                </div>
-
-                <div class="activity-meta">
-                  <small>2 weeks ago</small>
+                  <small>{{ formatRelativeDate(activity.date) }}</small>
                   <span class="activity-arrow">›</span>
                 </div>
               </button>
@@ -217,15 +191,15 @@
             <p>Where to Assist you!</p>
 
             <div class="help-actions">
-              <button type="button" class="help-btn">
+              <button type="button" class="help-btn" @click="openFaqModal">
                 <span class="help-btn-left">
                   <span class="help-btn-icon">?</span>
-                  <span>Browse for FQA</span>
+                  <span>Browse for FAQ</span>
                 </span>
                 <span class="help-btn-arrow">›</span>
               </button>
 
-              <button type="button" class="help-btn">
+              <button type="button" class="help-btn" @click="goToContactPage">
                 <span class="help-btn-left">
                   <span class="help-btn-icon">🎧</span>
                   <span>Contact For LTO Support</span>
@@ -233,6 +207,84 @@
                 <span class="help-btn-arrow">›</span>
               </button>
             </div>
+          </div>
+        </section>
+
+        <section class="dashboard-news-section">
+          <div class="dashboard-news-grid">
+            <article class="news-panel updates-panel">
+              <div class="news-panel-head">
+                <div>
+                  <span class="news-kicker">LTO Updates</span>
+                  <h3>Latest official updates</h3>
+                  <p>
+                    Helpful service reminders and portal updates for quick
+                    reference.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="news-head-btn"
+                  :disabled="isPageLoading"
+                  @click="openOfficialWebsite"
+                >
+                  View Official Site
+                </button>
+              </div>
+
+              <div class="news-list">
+                <article
+                  v-for="item in ltoUpdates"
+                  :key="item.title"
+                  class="news-item-card"
+                >
+                  <div class="news-item-top">
+                    <span class="news-badge">{{ item.badge }}</span>
+                    <small>{{ item.time }}</small>
+                  </div>
+                  <h4>{{ item.title }}</h4>
+                  <p>{{ item.text }}</p>
+                </article>
+              </div>
+            </article>
+
+            <aside class="news-panel advisory-panel">
+              <div class="news-panel-head compact">
+                <div>
+                  <span class="news-kicker">Quick Advisory</span>
+                  <h3>Service information</h3>
+                </div>
+              </div>
+
+              <div class="advisory-stack">
+                <div class="advisory-card">
+                  <span class="advisory-label">CDE Online Validation Exam</span>
+                  <strong>Passing score is 80%</strong>
+                  <p>
+                    Review the CDE before renewal-related steps and take the
+                    online validation exam when ready.
+                  </p>
+                </div>
+
+                <div class="advisory-card">
+                  <span class="advisory-label">LTMS Portal</span>
+                  <strong>Release 2.5.4</strong>
+                  <p>
+                    The public portal currently shows Release 2.5.4, which you
+                    can mirror in the dashboard for consistency.
+                  </p>
+                </div>
+
+                <div class="advisory-card">
+                  <span class="advisory-label">Client Care</span>
+                  <strong>Use Contact for concerns</strong>
+                  <p>
+                    Users can reach LTO Client Care from the Contact page for
+                    support, inquiries, and transaction concerns.
+                  </p>
+                </div>
+              </div>
+            </aside>
           </div>
         </section>
       </div>
@@ -253,7 +305,13 @@
       @click.self="showIdModal = false"
     >
       <div class="modal-card">
-        <button class="modal-close" @click="showIdModal = false">×</button>
+        <button
+          class="modal-close"
+          :disabled="isPageLoading"
+          @click="showIdModal = false"
+        >
+          ×
+        </button>
 
         <div class="full-id-card">
           <div class="full-id-top">
@@ -312,82 +370,583 @@
       </div>
     </div>
 
-    <!-- TERMS AND CONDITIONS MODAL -->
-    <div v-if="showTermsModal" class="terms-overlay">
-      <div class="terms-modal" @click.stop>
-        <div class="terms-header">
-          <div class="terms-title-wrap">
-            <div class="terms-info-icon">!</div>
-            <h2>LTMS Terms of Use</h2>
+    <div
+      v-if="showFaqModal"
+      class="faq-modal-overlay"
+      @click.self="closeFaqModal"
+    >
+      <div
+        class="faq-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="faq-modal-title"
+      >
+        <div class="faq-modal-header">
+          <div>
+            <span class="faq-modal-kicker">LTO Help Center</span>
+            <h3 id="faq-modal-title">Frequently Asked Questions</h3>
+            <p>
+              Find quick answers about LTMS, licensing, vehicles, transactions,
+              violations, documents, and account support.
+            </p>
           </div>
 
-          <button class="terms-top-close" @click="closeTermsModal">×</button>
-        </div>
-
-        <div class="terms-body">
-          <p>
-            By clicking "I Agree", "I Accept", "Continue", "Sign Up", or
-            likewise, registering, accessing or using the LTMS Website or parts
-            of it, you agree to enter into a legally binding contract with the
-            Land Transportation Office (LTO) (even if you are a minor or
-            representing a person, company or entity). If you do not agree on
-            any of the Terms, do not proceed to avail the service.
-          </p>
-
-          <p>
-            The Services at the LTMS Website are available only to person,
-            natural or juridical, with a User Account. You will be held
-            responsible not only for the confidentiality of your password but
-            also for any statements made on your account. LTO likewise may,
-            without prior notice, alter, modify, restrict, or even suspend, and
-            stop any part of its LTMS website at its sole discretion.
-          </p>
-
-          <p>
-            LTO shall have no liability for any claim, loss or damage resulting
-            from the accuracy or completeness of the information at the LTMS
-            Website.
-          </p>
-
-          <p>
-            LTO neither makes no warranty nor guarantee, expressed or implied,
-            as to the eligibility or qualification for the Services since it
-            will be subjected to validation in order to approve any request for
-            application for the service. While LTO makes reasonable efforts to
-            ensure the availability of the Services, it does not guarantee,
-            however, that the Services will be processed at the designated place
-            or time.
-          </p>
-
-          <p>
-            LTO may change or impose additional fees for the Services at any
-            time without prior notice.
-          </p>
-
-          <p>
-            Unless otherwise specified, the Fee indicated in the pay order slip
-            is the Application Fee and does not cover the actual fees for the
-            Services. Confirmed payment for obligations are non-cancellable and
-            fees paid are non-refundable.
-          </p>
-        </div>
-
-        <div class="terms-actions">
-          <button class="terms-close-btn" @click="closeTermsModal">
-            Close
+          <button
+            type="button"
+            class="faq-modal-close"
+            :disabled="isPageLoading"
+            @click="closeFaqModal"
+          >
+            ×
           </button>
-          <button class="terms-accept-btn" @click="acceptTerms">Accept</button>
         </div>
+
+        <div class="faq-tools">
+          <div class="faq-search-field">
+            <label for="faq-search">Search FAQ</label>
+            <input
+              id="faq-search"
+              v-model="faqSearch"
+              type="search"
+              placeholder="Search by keyword, service, or concern"
+            />
+          </div>
+
+          <div class="faq-category-tabs">
+            <button
+              v-for="category in faqCategories"
+              :key="category"
+              type="button"
+              class="faq-category-tab"
+              :class="{ active: selectedFaqCategory === category }"
+              @click="selectedFaqCategory = category"
+            >
+              {{ category }}
+            </button>
+          </div>
+        </div>
+
+        <div class="faq-count-row">
+          <span>{{ filteredFaqItems.length }} FAQ result(s)</span>
+          <button type="button" @click="clearFaqFilters">Reset filters</button>
+        </div>
+
+        <div class="faq-note">
+          For direct assistance, use the separate “Contact For LTO Support”
+          button in the Need Help section.
+        </div>
+
+        <div class="faq-list">
+          <article
+            v-for="item in filteredFaqItems"
+            :key="item.id"
+            class="faq-item"
+            :class="{ open: selectedFaqItem?.id === item.id }"
+          >
+            <button
+              type="button"
+              class="faq-question"
+              @click.stop="openFaqDetail(item)"
+            >
+              <span class="faq-question-left">
+                <span class="faq-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 17h.01M9.25 9.25A2.75 2.75 0 1 1 12 12v1.25"
+                      stroke="currentColor"
+                      stroke-width="1.9"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      stroke-width="1.9"
+                    />
+                  </svg>
+                </span>
+
+                <span>
+                  <strong>{{ item.question }}</strong>
+                  <small>{{ item.category }}</small>
+                </span>
+              </span>
+
+              <span
+                class="faq-chevron"
+                :class="{ open: selectedFaqItem?.id === item.id }"
+              >
+                ›
+              </span>
+            </button>
+          </article>
+
+          <div v-if="filteredFaqItems.length === 0" class="empty-faq-state">
+            <strong>No FAQ found</strong>
+            <span>Try another keyword or select All FAQs.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="selectedFaqItem"
+      class="faq-detail-overlay"
+      @click.self="closeFaqDetail"
+    >
+      <div
+        class="faq-detail-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="faq-detail-title"
+      >
+        <div class="faq-detail-header">
+          <div class="faq-detail-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 17h.01M9.25 9.25A2.75 2.75 0 1 1 12 12v1.25"
+                stroke="currentColor"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                stroke-width="1.9"
+              />
+            </svg>
+          </div>
+
+          <div class="faq-detail-title-wrap">
+            <span class="faq-detail-kicker">{{
+              selectedFaqItem.category
+            }}</span>
+            <h3 id="faq-detail-title">{{ selectedFaqItem.question }}</h3>
+          </div>
+
+          <button
+            type="button"
+            class="faq-detail-close"
+            @click="closeFaqDetail"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="faq-detail-body">
+          <p>{{ selectedFaqItem.answer }}</p>
+
+          <div class="faq-detail-note">
+            <strong>Reminder</strong>
+            <span>
+              Requirements and availability may still depend on official LTO
+              validation, transaction type, and your account records.
+            </span>
+          </div>
+        </div>
+
+        <div class="faq-detail-actions">
+          <button type="button" class="faq-detail-done" @click="closeFaqDetail">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showRecentActivityModal"
+      class="activity-modal-overlay"
+      @click.self="closeRecentActivityModal"
+    >
+      <div
+        class="activity-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="activity-modal-title"
+      >
+        <div class="activity-modal-header">
+          <div>
+            <span class="activity-modal-kicker">LTMS Activity Log</span>
+            <h3 id="activity-modal-title">All Recent Activities</h3>
+            <p>
+              View your 10 most recent LTMS actions and filter by specific
+              dates.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="activity-modal-close"
+            :disabled="isPageLoading"
+            @click="closeRecentActivityModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="activity-filter-panel">
+          <div class="filter-field">
+            <label for="activity-sort">Sort</label>
+            <select id="activity-sort" v-model="activitySortOrder">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="activity-from">From</label>
+            <input id="activity-from" v-model="activityDateFrom" type="date" />
+          </div>
+
+          <div class="filter-field">
+            <label for="activity-to">To</label>
+            <input id="activity-to" v-model="activityDateTo" type="date" />
+          </div>
+
+          <button
+            type="button"
+            class="clear-filter-btn"
+            @click="clearActivityFilters"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <div class="activity-count-row">
+          <span>{{ filteredRecentActivities.length }} activity record(s)</span>
+          <strong>Showing most recent LTMS actions</strong>
+        </div>
+
+        <div class="activity-modal-list">
+          <button
+            v-for="activity in filteredRecentActivities"
+            :key="activity.id"
+            type="button"
+            class="activity-modal-item"
+          >
+            <div class="activity-modal-icon" v-html="activity.icon"></div>
+
+            <div class="activity-modal-copy">
+              <div class="activity-modal-title-row">
+                <strong>{{ activity.title }}</strong>
+                <span :class="['activity-status-chip', activity.statusClass]">
+                  {{ activity.status }}
+                </span>
+              </div>
+
+              <p>{{ activity.description }}</p>
+
+              <div class="activity-modal-meta">
+                <span>{{ formatFullDate(activity.date) }}</span>
+                <span>•</span>
+                <span>{{ activity.category }}</span>
+              </div>
+            </div>
+          </button>
+
+          <div
+            v-if="filteredRecentActivities.length === 0"
+            class="empty-activity-state"
+          >
+            <strong>No activities found</strong>
+            <span>Try adjusting the selected date range.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showTermsModal" class="terms-overlay">
+      <div
+        class="terms-modal premium-terms-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="terms-modal-title"
+        @click.stop
+      >
+        <div class="terms-hero">
+          <div class="terms-seal-wrap">
+            <img :src="logo" alt="LTO Logo" class="terms-seal" />
+          </div>
+
+          <div class="terms-hero-copy">
+            <span class="terms-kicker">Secure LTMS Access</span>
+            <h2 id="terms-modal-title">{{ termsModalTitle }}</h2>
+            <p>
+              Please review and accept the terms before continuing to
+              {{ pendingServiceLabel }} services.
+            </p>
+          </div>
+
+          <button
+            class="terms-top-close premium-close"
+            type="button"
+            :disabled="isPageLoading"
+            @click="closeTermsModal"
+            aria-label="Close terms modal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="terms-service-card">
+          <div class="terms-service-icon">
+            <component
+              :is="pendingServiceIcon"
+              :stroke-width="2.2"
+              aria-hidden="true"
+            />
+          </div>
+
+          <div class="terms-service-copy">
+            <span>Selected Service</span>
+            <strong>{{ pendingServiceLabel }}</strong>
+            <small>{{ pendingServiceDescription }}</small>
+          </div>
+        </div>
+
+        <div class="terms-body premium-terms-body">
+          <section class="terms-section">
+            <h3>Terms of Use</h3>
+
+            <p>
+              By clicking "I Agree", "I Accept", "Continue", "Sign Up", or
+              likewise, registering, accessing or using the LTMS Website or
+              parts of it, you agree to enter into a legally binding contract
+              with the Land Transportation Office (LTO) even if you are a minor
+              or representing a person, company or entity. If you do not agree
+              on any of the Terms, do not proceed to avail the service.
+            </p>
+
+            <p>
+              The Services at the LTMS Website are available only to person,
+              natural or juridical, with a User Account. You will be held
+              responsible not only for the confidentiality of your password but
+              also for any statements made on your account. LTO may, without
+              prior notice, alter, modify, restrict, suspend, or stop any part
+              of its LTMS website at its sole discretion.
+            </p>
+
+            <p>
+              LTO shall have no liability for any claim, loss or damage
+              resulting from the accuracy or completeness of the information at
+              the LTMS Website.
+            </p>
+
+            <p>
+              LTO makes no warranty or guarantee, expressed or implied, as to
+              the eligibility or qualification for the Services because requests
+              are still subject to validation and approval. While LTO makes
+              reasonable efforts to ensure the availability of the Services, it
+              does not guarantee that the Services will be processed at the
+              designated place or time.
+            </p>
+
+            <p>
+              LTO may change or impose additional fees for the Services at any
+              time without prior notice. Unless otherwise specified, the fee
+              indicated in the pay order slip is the Application Fee and does
+              not cover the actual fees for the Services. Confirmed payment
+              obligations are non-cancellable and fees paid are non-refundable.
+            </p>
+          </section>
+        </div>
+
+        <div class="terms-confirm-panel">
+          <label class="terms-checkbox">
+            <input
+              v-model="hasAcceptedTerms"
+              type="checkbox"
+              :disabled="isPageLoading"
+            />
+            <span>
+              I have read and agree to the LTMS Terms of Use for
+              {{ pendingServiceLabel }}.
+            </span>
+          </label>
+        </div>
+
+        <div class="terms-actions premium-terms-actions">
+          <button
+            class="terms-close-btn"
+            type="button"
+            :disabled="isPageLoading"
+            @click="closeTermsModal"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="terms-accept-btn"
+            type="button"
+            :disabled="isPageLoading || !hasAcceptedTerms"
+            @click="acceptTerms"
+          >
+            Accept &amp; Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    v-if="showLogoutModal"
+    class="logout-modal-overlay"
+    @click.self="cancelLogout"
+  >
+    <div class="logout-modal-card">
+      <div class="logout-modal-icon-wrap">
+        <div class="logout-modal-icon">↗</div>
+      </div>
+
+      <div class="logout-modal-copy">
+        <span class="logout-modal-kicker">Confirm action</span>
+        <h3>Log out of LTMS Portal?</h3>
+        <p>
+          You are about to end your current session and return to the landing
+          page.
+        </p>
+      </div>
+
+      <div class="logout-modal-actions">
+        <button
+          type="button"
+          class="logout-cancel-btn"
+          :disabled="isPageLoading"
+          @click="cancelLogout"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="logout-confirm-btn"
+          :disabled="isPageLoading"
+          @click="logoutUser"
+        >
+          Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    v-if="showSettingsModal"
+    class="settings-modal-overlay"
+    @click.self="closeSettingsModal"
+  >
+    <div
+      class="settings-modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
+      <div class="settings-modal-header">
+        <div>
+          <span class="settings-modal-kicker">Accessibility</span>
+          <h3 id="settings-modal-title">Settings</h3>
+        </div>
+
+        <button
+          type="button"
+          class="settings-close-btn"
+          :disabled="isPageLoading"
+          @click="closeSettingsModal"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="settings-modal-body">
+        <div class="settings-option-card">
+          <div class="settings-option-copy">
+            <strong>Dark Mode</strong>
+            <span>Use a darker color scheme for better low-light viewing.</span>
+          </div>
+
+          <label class="switch">
+            <input v-model="accessibilitySettings.darkMode" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-option-card">
+          <div class="settings-option-copy">
+            <strong>Larger Text</strong>
+            <span>Increase text size to improve readability.</span>
+          </div>
+
+          <label class="switch">
+            <input v-model="accessibilitySettings.largeText" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-option-card">
+          <div class="settings-option-copy">
+            <strong>Reduced Motion</strong>
+            <span
+              >Minimize animations and transitions across the interface.</span
+            >
+          </div>
+
+          <label class="switch">
+            <input
+              v-model="accessibilitySettings.reducedMotion"
+              type="checkbox"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-option-card">
+          <div class="settings-option-copy">
+            <strong>High Contrast</strong>
+            <span>
+              Increase contrast to improve visibility of interface elements.
+            </span>
+          </div>
+
+          <label class="switch">
+            <input
+              v-model="accessibilitySettings.highContrast"
+              type="checkbox"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-modal-actions">
+        <button
+          type="button"
+          class="settings-done-btn"
+          @click="closeSettingsModal"
+        >
+          Done
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRouter } from "vue-router";
 import logo from "../assets/logo.png";
 import profileImage from "../assets/profile.png";
+import { useAccessibility } from "../composables/useAccessibility";
 
 import {
   IdCard,
@@ -397,63 +956,697 @@ import {
   Files,
 } from "lucide-vue-next";
 
-const open = ref(false);
+const showSettingsModal = ref(false);
+const { settings: accessibilitySettings } = useAccessibility();
 
-const toggleMenu = () => {
-  open.value = !open.value;
+const openSettingsModal = () => {
+  closeUserMenu();
+  showSettingsModal.value = true;
 };
 
-const goToELearning = () => {
-  router.push("/e-learning");
+const closeSettingsModal = () => {
+  if (isPageLoading.value) return;
+  showSettingsModal.value = false;
 };
 
+const showLogoutModal = ref(false);
+
+const requestLogout = () => {
+  closeUserMenu();
+  showLogoutModal.value = true;
+};
+
+const cancelLogout = () => {
+  if (isPageLoading.value) return;
+  showLogoutModal.value = false;
+};
+
+const showUserMenu = ref(false);
+const userMenuRef = ref<HTMLElement | null>(null);
+const isPageLoading = ref(false);
 const showIdModal = ref(false);
 const showTermsModal = ref(false);
+const showRecentActivityModal = ref(false);
+const showFaqModal = ref(false);
+const faqSearch = ref("");
+const selectedFaqCategory = ref("All FAQs");
+const openFaqItems = ref<number[]>([]);
+const selectedFaqItem = ref<null | {
+  id: number;
+  category: string;
+  question: string;
+  answer: string;
+}>(null);
+const activitySortOrder = ref<"newest" | "oldest">("newest");
+const activityDateFrom = ref("");
+const activityDateTo = ref("");
+const pendingRoute = ref("");
+const pendingServiceTitle = ref("");
+const hasAcceptedTerms = ref(false);
+
 const router = useRouter();
 
-const pendingRoute = ref("");
+const serviceTermsMeta: Record<
+  string,
+  {
+    label: string;
+    description: string;
+    icon: typeof IdCard;
+  }
+> = {
+  LICENSING: {
+    label: "Licensing",
+    description: "Apply, renew, and manage driver or student license services.",
+    icon: IdCard,
+  },
+  VEHICLE: {
+    label: "Vehicle",
+    description:
+      "Check vehicle registration details and manage vehicle records.",
+    icon: CarFront,
+  },
+};
 
-const goToCard = (title: string) => {
-  if (title === "LICENSING") {
-    pendingRoute.value = "/licensing";
+const pendingServiceMeta = computed(() => {
+  return (
+    serviceTermsMeta[pendingServiceTitle.value] || {
+      label: "LTMS",
+      description: "Continue to the selected LTMS service.",
+      icon: IdCard,
+    }
+  );
+});
+
+const pendingServiceLabel = computed(() => pendingServiceMeta.value.label);
+const pendingServiceDescription = computed(
+  () => pendingServiceMeta.value.description,
+);
+const pendingServiceIcon = computed(() => pendingServiceMeta.value.icon);
+const termsModalTitle = computed(
+  () => `${pendingServiceLabel.value} Terms & Conditions`,
+);
+
+const delay = (ms: number) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const beginPageLoading = async () => {
+  if (isPageLoading.value) return false;
+  isPageLoading.value = true;
+  showUserMenu.value = false;
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  await nextTick();
+  await delay(220);
+  return true;
+};
+
+const endPageLoading = () => {
+  isPageLoading.value = false;
+};
+
+const logoutUser = async () => {
+  showLogoutModal.value = false;
+
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    await router.push("/");
+  } catch {
+    endPageLoading();
+  }
+};
+
+const goToProfile = async () => {
+  closeUserMenu();
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  try {
+    await router.push("/profile");
+  } catch {
+    endPageLoading();
+  }
+};
+
+const toggleUserMenu = () => {
+  if (isPageLoading.value) return;
+  showUserMenu.value = !showUserMenu.value;
+};
+
+const closeUserMenu = () => {
+  showUserMenu.value = false;
+};
+
+const handleDocumentClick = (event: MouseEvent) => {
+  const target = event.target as Node | null;
+  if (!userMenuRef.value || !target) return;
+
+  if (!userMenuRef.value.contains(target)) {
+    closeUserMenu();
+  }
+};
+
+const goToELearning = async () => {
+  const currentPath = router.currentRoute.value.path;
+
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  if (currentPath === "/e-learning") {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push("/e-learning");
+  } catch {
+    endPageLoading();
+  }
+};
+
+const goToDashboard = async () => {
+  const currentPath = router.currentRoute.value.path;
+
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  if (currentPath === "/home") {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push("/home");
+  } catch {
+    endPageLoading();
+  }
+};
+
+const goToContact = async () => {
+  closeUserMenu();
+  const started = await beginPageLoading();
+  if (!started) return;
+  await delay(280);
+  endPageLoading();
+};
+
+const openOfficialWebsite = async () => {
+  closeUserMenu();
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  await delay(180);
+  window.open("https://lto.gov.ph", "_blank", "noopener,noreferrer");
+  await delay(160);
+  endPageLoading();
+};
+
+const goToCard = async (title: string) => {
+  if (isPageLoading.value) return;
+
+  const routeMap: Record<string, string> = {
+    LICENSING: "/licensing",
+    VEHICLE: "/vehicle", // connects to VehiclePage.vue through your router
+    TRANSACTIONS: "/transactions",
+    VIOLATIONS: "/violations",
+    DOCUMENTS: "/documents",
+  };
+
+  const targetRoute = routeMap[title];
+  if (!targetRoute) return;
+
+  if (title === "LICENSING" || title === "VEHICLE") {
+    pendingRoute.value = targetRoute;
+    pendingServiceTitle.value = title;
+    hasAcceptedTerms.value = false;
     showTermsModal.value = true;
     return;
   }
 
-  if (title === "VEHICLE") {
-    router.push("/vehicle");
+  const currentPath = router.currentRoute.value.path;
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  if (currentPath === targetRoute) {
+    await delay(280);
+    endPageLoading();
     return;
   }
 
-  if (title === "TRANSACTIONS") {
-    router.push("/transactions");
-    return;
-  }
-
-  if (title === "VIOLATIONS") {
-    router.push("/violations");
-    return;
-  }
-
-  if (title === "DOCUMENTS") {
-    router.push("/documents");
-    return;
+  try {
+    await router.push(targetRoute);
+  } catch {
+    endPageLoading();
   }
 };
 
 const closeTermsModal = () => {
+  if (isPageLoading.value) return;
   showTermsModal.value = false;
   pendingRoute.value = "";
+  pendingServiceTitle.value = "";
+  hasAcceptedTerms.value = false;
 };
 
-const acceptTerms = () => {
+const acceptTerms = async () => {
+  if (!hasAcceptedTerms.value) return;
+
+  const targetRoute = pendingRoute.value;
   showTermsModal.value = false;
 
-  if (pendingRoute.value) {
-    router.push(pendingRoute.value);
-    pendingRoute.value = "";
+  if (!targetRoute) return;
+
+  const currentPath = router.currentRoute.value.path;
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  pendingRoute.value = "";
+
+  if (currentPath === targetRoute) {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push(targetRoute);
+  } catch {
+    endPageLoading();
   }
 };
+
+onMounted(() => {
+  document.addEventListener("click", handleDocumentClick);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
+});
+
+watch(
+  () => router.currentRoute.value.fullPath,
+  async () => {
+    if (!isPageLoading.value) return;
+    await delay(120);
+    endPageLoading();
+  },
+);
+
+const faqItems = [
+  {
+    id: 1,
+    category: "LTMS Account",
+    question: "How do I create or access an LTMS account?",
+    answer:
+      "Open the LTMS portal, register using your personal information, verify your account, and sign in with your registered credentials. Keep your email, mobile number, and password secure.",
+  },
+  {
+    id: 2,
+    category: "Licensing",
+    question: "How do I apply for or renew a driver’s license online?",
+    answer:
+      "Go to Licensing, accept the terms, select the correct license classification and application type, review your details, then submit the application. Some steps may still require validation or appearance at an LTO office.",
+  },
+  {
+    id: 3,
+    category: "E-Learning",
+    question: "What is the CDE online validation exam?",
+    answer:
+      "The Comprehensive Driver Education validation exam is used for renewal-related learning requirements. Review the course materials first, then take the online validation exam when ready.",
+  },
+  {
+    id: 4,
+    category: "Vehicle",
+    question: "How can I view or manage my vehicle records?",
+    answer:
+      "Go to Vehicle services to check linked motor vehicle records, registration details, renewal options, and available vehicle-related transactions.",
+  },
+  {
+    id: 5,
+    category: "Vehicle",
+    question: "What if my vehicle is not listed in my LTMS account?",
+    answer:
+      "If your vehicle is not listed, visit or contact the appropriate LTO office so the motor vehicle record can be verified and linked to your LTMS account.",
+  },
+  {
+    id: 6,
+    category: "Transactions",
+    question: "Where can I track application status and payment history?",
+    answer:
+      "Use the Transactions module to review application progress, payment-related records, official receipt information, and transaction history.",
+  },
+  {
+    id: 7,
+    category: "Violations",
+    question: "Can I check or settle traffic violations through the portal?",
+    answer:
+      "Use the Violations module to check traffic violation records and available settlement options. Some violations may require additional verification or office processing.",
+  },
+  {
+    id: 8,
+    category: "Documents",
+    question: "How do I request official copies or electronic records?",
+    answer:
+      "Open Documents to request available official copies, electronic records, or related documents. Make sure your profile and transaction information are accurate before submission.",
+  },
+  {
+    id: 9,
+    category: "Profile",
+    question: "How do I update my profile information?",
+    answer:
+      "Go to Profile to review your personal information. Some fields may be editable online, while sensitive identity details may require LTO verification.",
+  },
+  {
+    id: 10,
+    category: "Support",
+    question: "How do I contact LTO support?",
+    answer:
+      "Click Contact For LTO Support or open the Contact page from the top navigation. Use it for account issues, transaction concerns, portal support, and general inquiries.",
+  },
+];
+
+const faqCategories = computed(() => [
+  "All FAQs",
+  ...Array.from(new Set(faqItems.map((item) => item.category))),
+]);
+
+const filteredFaqItems = computed(() => {
+  const search = faqSearch.value.trim().toLowerCase();
+
+  return faqItems.filter((item) => {
+    const matchesCategory =
+      selectedFaqCategory.value === "All FAQs" ||
+      item.category === selectedFaqCategory.value;
+
+    const matchesSearch =
+      !search ||
+      [item.question, item.answer, item.category]
+        .join(" ")
+        .toLowerCase()
+        .includes(search);
+
+    return matchesCategory && matchesSearch;
+  });
+});
+
+const openFaqModal = () => {
+  if (isPageLoading.value) return;
+  showFaqModal.value = true;
+};
+
+const closeFaqModal = () => {
+  if (isPageLoading.value) return;
+  selectedFaqItem.value = null;
+  showFaqModal.value = false;
+};
+
+const openFaqDetail = (item: {
+  id: number;
+  category: string;
+  question: string;
+  answer: string;
+}) => {
+  selectedFaqItem.value = item;
+};
+
+const closeFaqDetail = () => {
+  selectedFaqItem.value = null;
+};
+
+const clearFaqFilters = () => {
+  faqSearch.value = "";
+  selectedFaqCategory.value = "All FAQs";
+};
+
+const goToContactPage = async () => {
+  closeFaqModal();
+  closeUserMenu();
+
+  const currentPath = router.currentRoute.value.path;
+  const started = await beginPageLoading();
+  if (!started) return;
+
+  if (currentPath === "/contact") {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push("/contact");
+  } catch {
+    endPageLoading();
+  }
+};
+
+const recentActivities = [
+  {
+    id: 1,
+    title: "Vehicle Registration Renewal",
+    description: "Submitted renewal application for Toyota Vios NAB 4827.",
+    category: "Vehicle",
+    status: "Submitted",
+    statusClass: "submitted",
+    date: "2026-04-28",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 2,
+    title: "Driver License Renewal",
+    description: "Applied for driver's license renewal.",
+    category: "Licensing",
+    status: "For Review",
+    statusClass: "review",
+    date: "2026-04-24",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="3.75" y="5.5" width="16.5" height="13" rx="2.4" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M7.5 10h5.5M7.5 13h3.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="16" cy="12" r="2.15" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+  },
+  {
+    id: 3,
+    title: "CDE Online Validation Exam",
+    description:
+      "Completed the Comprehensive Driver Education validation exam.",
+    category: "E-Learning",
+    status: "Completed",
+    statusClass: "completed",
+    date: "2026-04-18",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4.5 6.5h15v11h-15z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M8 10h8M8 13.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 4,
+    title: "Official Receipt Viewed",
+    description: "Opened official receipt validation details.",
+    category: "Transactions",
+    status: "Viewed",
+    statusClass: "viewed",
+    date: "2026-04-12",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 5,
+    title: "Digital ID Opened",
+    description: "Viewed full LTMS digital ID information.",
+    category: "Profile",
+    status: "Viewed",
+    statusClass: "viewed",
+    date: "2026-04-08",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="9" cy="11" r="2" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13.5 10h3M13.5 13h3M7 16c.5-1 1.2-1.5 2-1.5s1.5.5 2 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 6,
+    title: "Vehicle Record Checked",
+    description: "Reviewed linked vehicle record for Honda Click DCA 9142.",
+    category: "Vehicle",
+    status: "Checked",
+    statusClass: "completed",
+    date: "2026-04-03",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M6 16h12M7 16l1.5-5h7L17 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="8" cy="17" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="16" cy="17" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+  },
+  {
+    id: 7,
+    title: "Profile Information Updated",
+    description: "Updated contact and profile information.",
+    category: "Profile",
+    status: "Updated",
+    statusClass: "completed",
+    date: "2026-03-28",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M5 19c0-3.2 3.2-5.2 7-5.2s7 2 7 5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 8,
+    title: "Traffic Violation Check",
+    description: "Checked account for unsettled traffic violations.",
+    category: "Violations",
+    status: "No Record",
+    statusClass: "completed",
+    date: "2026-03-21",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8.5v5M12 17h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 9,
+    title: "Document Request Started",
+    description: "Started request for electronic records.",
+    category: "Documents",
+    status: "Draft",
+    statusClass: "review",
+    date: "2026-03-15",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M14.5 4.25v4h4M8.5 12h7M8.5 15.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+  {
+    id: 10,
+    title: "Defensive Driving Course Viewed",
+    description: "Viewed defensive driving course material.",
+    category: "E-Learning",
+    status: "Viewed",
+    statusClass: "viewed",
+    date: "2026-03-10",
+    icon: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="3" width="10" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="18" cy="15" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M20.5 17.5l2 2M8 7h2M8 11h2M8 15h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+  },
+];
+
+const filteredRecentActivities = computed(() => {
+  const from = activityDateFrom.value ? new Date(activityDateFrom.value) : null;
+  const to = activityDateTo.value ? new Date(activityDateTo.value) : null;
+
+  if (to) {
+    to.setHours(23, 59, 59, 999);
+  }
+
+  return [...recentActivities]
+    .filter((activity) => {
+      const activityDate = new Date(activity.date);
+
+      if (from && activityDate < from) return false;
+      if (to && activityDate > to) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      const first = new Date(a.date).getTime();
+      const second = new Date(b.date).getTime();
+
+      return activitySortOrder.value === "newest"
+        ? second - first
+        : first - second;
+    });
+});
+
+const openRecentActivityModal = () => {
+  if (isPageLoading.value) return;
+  showRecentActivityModal.value = true;
+};
+
+const closeRecentActivityModal = () => {
+  if (isPageLoading.value) return;
+  showRecentActivityModal.value = false;
+};
+
+const clearActivityFilters = () => {
+  activityDateFrom.value = "";
+  activityDateTo.value = "";
+  activitySortOrder.value = "newest";
+};
+
+const formatFullDate = (dateValue: string) => {
+  return new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(dateValue));
+};
+
+const formatRelativeDate = (dateValue: string) => {
+  const activityDate = new Date(dateValue);
+  const today = new Date("2026-04-29");
+  const diffMs = today.getTime() - activityDate.getTime();
+  const diffDays = Math.max(0, Math.round(diffMs / 86400000));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30)
+    return `${Math.round(diffDays / 7)} week${Math.round(diffDays / 7) > 1 ? "s" : ""} ago`;
+
+  return formatFullDate(dateValue);
+};
+
+const ltoUpdates = [
+  {
+    badge: "Portal Update",
+    time: "Current",
+    title: "LTMS public portal remains available online",
+    text: "The LTMS public portal is available for account access, e-learning, contact support, and online services.",
+  },
+  {
+    badge: "Renewal Reminder",
+    time: "Current",
+    title: "CDE online validation exam requires an 80% passing score",
+    text: "The public CDE page indicates that renewal-related validation requires at least 20 correct answers out of 25 items.",
+  },
+  {
+    badge: "Service Notice",
+    time: "Current",
+    title: "Official receipt and digital ID validation remain available",
+    text: "Public LTMS validation pages continue to support official receipt and digital ID verification access.",
+  },
+];
 
 const cards = [
   {
@@ -489,62 +1682,50 @@ const cards = [
   box-sizing: border-box;
 }
 
-.user-dropdown {
-  position: relative;
+.page-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: white;
-}
-
-.user-icon {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 120px;
+  background: rgba(237, 241, 244, 0.56);
+  backdrop-filter: blur(4px);
 }
 
-.user-icon svg {
-  width: 100%;
-  height: 100%;
+.page-loading-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d9e6f7;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
-.user-id {
-  font-size: 12px;
-  font-weight: 600;
+.page-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cfe0fb;
+  border-top-color: #1f5fb7;
+  animation: dashboardSpin 0.85s linear infinite;
 }
 
-.dropdown-arrow {
-  font-size: 12px;
+.page-loading-text {
+  color: #154b96;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 
-.dropdown-menu {
-  position: absolute;
-  top: 120%;
-  right: 0;
-  width: 140px;
-  background: white;
-  color: #1f2937;
-  border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  z-index: 10;
-}
-
-.dropdown-menu button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  background: none;
-  text-align: left;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.dropdown-menu button:hover {
-  background: #f3f4f6;
+@keyframes dashboardSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 :global(html, body, #app) {
@@ -562,15 +1743,14 @@ const cards = [
 }
 
 .topbar {
-  height: 72px;
+  min-height: 72px;
   background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0 28px;
   box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
-  z-index: 5;
 }
 
 .topbar-left {
@@ -579,81 +1759,199 @@ const cards = [
   gap: 12px;
 }
 
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.brand-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.88;
+  color: #fff;
+}
+
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   object-fit: cover;
-  background: white;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .brand-text {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.3px;
+  color: #fff;
 }
 
 .topbar-nav {
   display: flex;
-  gap: 18px;
   align-items: center;
+  gap: 22px;
 }
 
 .nav-item {
-  color: #fff;
+  position: relative;
+  color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.profile-card {
+.nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.nav-item.active {
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 22px rgba(4, 20, 52, 0.22);
+}
+
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffffff 0%, #cfe0ff 100%);
+  opacity: 0.95;
+}
+
+.nav-item.dashboard-active {
+  padding-inline: 16px;
+}
+
+.user-menu {
+  position: relative;
   display: flex;
+  align-items: center;
+}
+
+.user-menu-trigger {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: #f8f8f8;
-  color: #11243f;
-  border-radius: 12px;
-  padding: 8px 12px;
-  min-width: 250px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14);
+  min-height: 42px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
 }
 
-.profile-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
-.profile-name {
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
   font-size: 13px;
   font-weight: 800;
+  flex: 0 0 30px;
 }
 
-.profile-status {
+.user-info {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #129247;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.user-name {
   font-size: 12px;
-  margin: 4px 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #129247;
+.user-id {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.84;
+  white-space: nowrap;
 }
 
-.profile-id {
-  font-size: 12px;
-  color: #59697c;
+.user-caret {
+  width: 14px;
+  height: 14px;
+  opacity: 0.86;
 }
 
-.service-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #dbe5f3;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
+  z-index: 40;
+}
+
+.user-dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  text-align: left;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.user-dropdown-item:hover {
+  background: #f4f8ff;
+  color: #154b96;
+}
+
+.user-dropdown-item.danger:hover {
+  background: #fff1f2;
+  color: #be123c;
 }
 
 .hero {
@@ -865,6 +2163,11 @@ const cards = [
   box-shadow: 0 8px 18px rgba(21, 75, 150, 0.22);
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .dashboard-lower {
   margin-top: 28px;
   display: grid;
@@ -1041,6 +2344,137 @@ const cards = [
 .help-btn-arrow {
   font-size: 20px;
   line-height: 1;
+}
+
+.dashboard-news-section {
+  margin-top: 24px;
+}
+
+.dashboard-news-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.news-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  padding: 18px;
+  text-align: left;
+}
+
+.news-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.news-panel-head.compact {
+  margin-bottom: 14px;
+}
+
+.news-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1f4fb8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.news-panel-head h3 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: #1f2937;
+}
+
+.news-panel-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 620px;
+}
+
+.news-head-btn {
+  min-height: 38px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.news-list,
+.advisory-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.news-item-card,
+.advisory-card {
+  border: 1px solid #e6ebf3;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+  padding: 14px;
+}
+
+.news-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.news-badge,
+.advisory-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e9f0ff;
+  color: #2154d8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.news-item-top small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.news-item-card h4,
+.advisory-card strong {
+  margin: 0 0 8px;
+  color: #1f2937;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.news-item-card p,
+.advisory-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .footer {
@@ -1328,6 +2762,327 @@ const cards = [
   background: #0f4fc1;
 }
 
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.logout-modal-card {
+  width: min(420px, 100%);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe5f3;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  padding: 24px;
+  text-align: center;
+}
+
+.logout-modal-icon-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.logout-modal-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #eef4ff 0%, #dfeaff 100%);
+  color: #154b96;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 20px rgba(21, 75, 150, 0.12);
+}
+
+.logout-modal-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #1f5fb7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.logout-modal-copy h3 {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.logout-modal-copy p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.logout-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.logout-cancel-btn,
+.logout-confirm-btn {
+  flex: 1;
+  min-height: 46px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.logout-cancel-btn {
+  border: 1px solid #d8e2ef;
+  background: #ffffff;
+  color: #154b96;
+}
+
+.logout-confirm-btn {
+  border: none;
+  background: linear-gradient(180deg, #d92d20 0%, #b42318 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(180, 35, 24, 0.18);
+}
+
+.logout-cancel-btn:hover,
+.logout-confirm-btn:hover {
+  transform: translateY(-1px);
+}
+
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.settings-modal-card {
+  width: min(560px, 100%);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe5f3;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e5edf7;
+}
+
+.settings-modal-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #1f5fb7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.settings-close-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d8e2ef;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #154b96;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.settings-modal-body {
+  padding: 20px 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.settings-option-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #e4ebf5;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.settings-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-option-copy strong {
+  color: #1f2937;
+  font-size: 16px;
+}
+
+.settings-option-copy span {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+.settings-modal-actions {
+  padding: 0 24px 24px;
+}
+
+.settings-done-btn {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(21, 75, 150, 0.16);
+}
+
+.switch {
+  position: relative;
+  width: 56px;
+  height: 32px;
+  flex: 0 0 56px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d7e3f5;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 4px;
+  top: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+  transition: 0.25s ease;
+}
+
+.switch input:checked + .slider {
+  background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+.service-card,
+.clickable-card,
+.digital-id-card,
+.activity-item,
+.help-btn,
+.news-item-card,
+.advisory-card {
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.service-card:hover,
+.clickable-card:hover,
+.digital-id-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.16);
+  border-color: rgba(21, 75, 150, 0.18);
+}
+
+.clickable-card:hover .icon-shell,
+.digital-id-card:hover .mini-id-card {
+  transform: scale(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 14px 24px rgba(27, 74, 145, 0.14);
+}
+
+.icon-shell,
+.mini-id-card {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.activity-item:hover,
+.help-btn:hover,
+.news-item-card:hover,
+.advisory-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.view-btn:hover,
+.news-head-btn:hover,
+.logout-cancel-btn:hover,
+.logout-confirm-btn:hover,
+.settings-done-btn:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(21, 75, 150, 0.2);
+}
+
+.clickable-card:active,
+.digital-id-card:active,
+.activity-item:active,
+.help-btn:active,
+.news-item-card:active,
+.advisory-card:active,
+.view-btn:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
 @media (max-width: 1280px) {
   .cards {
     grid-template-columns: repeat(3, minmax(180px, 1fr));
@@ -1335,7 +3090,8 @@ const cards = [
 }
 
 @media (max-width: 1100px) {
-  .dashboard-lower {
+  .dashboard-lower,
+  .dashboard-news-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1434,6 +3190,11 @@ const cards = [
     flex: 1;
   }
 
+  .user-menu-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
   .activity-item {
     grid-template-columns: 30px 1fr;
   }
@@ -1442,6 +3203,1453 @@ const cards = [
     grid-column: 2;
     justify-content: space-between;
     margin-top: 4px;
+  }
+
+  .logout-modal-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .logout-modal-actions {
+    flex-direction: column;
+  }
+
+  .settings-modal-card {
+    border-radius: 20px;
+  }
+
+  .settings-modal-header,
+  .settings-modal-body,
+  .settings-modal-actions {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .settings-option-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .switch {
+    align-self: flex-end;
+  }
+}
+
+/* PREMIUM TERMS & CONDITIONS MODAL */
+
+.terms-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.24), transparent 34%),
+    rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(10px);
+}
+
+.terms-modal.premium-terms-modal {
+  width: min(860px, 100%);
+  max-height: min(88vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(219, 229, 243, 0.95);
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.terms-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 24px 24px 20px;
+  background:
+    linear-gradient(135deg, rgba(13, 70, 143, 0.98), rgba(10, 56, 116, 0.98)),
+    radial-gradient(
+      circle at top right,
+      rgba(147, 197, 253, 0.28),
+      transparent 38%
+    );
+  color: #ffffff;
+}
+
+.terms-seal-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.terms-seal {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.terms-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.terms-hero-copy h2 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.45px;
+}
+
+.terms-hero-copy p {
+  margin: 8px 0 0;
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.terms-top-close.premium-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.terms-top-close.premium-close:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.terms-service-card {
+  margin: 18px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.08);
+}
+
+.terms-service-icon {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb 0%, #0f3d87 100%);
+  box-shadow:
+    0 14px 26px rgba(29, 78, 216, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.terms-service-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.terms-service-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.terms-service-copy span {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.terms-service-copy strong {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.terms-service-copy small {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.terms-body.premium-terms-body {
+  margin: 18px 24px 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  background: transparent;
+  color: #334155;
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.terms-section {
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.terms-section h3 {
+  margin: 0 0 14px;
+  color: #0f3d87;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.terms-body.premium-terms-body p {
+  margin: 0 0 16px;
+}
+
+.terms-body.premium-terms-body p:last-child {
+  margin-bottom: 0;
+}
+
+.terms-confirm-panel {
+  margin: 16px 24px 0;
+  padding: 15px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.terms-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: #1d4ed8;
+  flex: 0 0 18px;
+}
+
+.terms-actions.premium-terms-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 24px 24px;
+  background: transparent;
+}
+
+.terms-close-btn,
+.terms-accept-btn {
+  min-width: 136px;
+  min-height: 46px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.terms-close-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.terms-close-btn:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.terms-accept-btn {
+  border: none;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 24px rgba(29, 78, 216, 0.24);
+}
+
+.terms-accept-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+}
+
+.terms-accept-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .terms-modal.premium-terms-modal {
+    max-height: 92vh;
+    border-radius: 22px;
+  }
+
+  .terms-hero {
+    grid-template-columns: 1fr auto;
+  }
+
+  .terms-seal-wrap {
+    display: none;
+  }
+
+  .terms-hero-copy h2 {
+    font-size: 22px;
+  }
+
+  .terms-service-card {
+    margin-inline: 16px;
+  }
+
+  .terms-body.premium-terms-body {
+    margin-inline: 16px;
+    max-height: 38vh;
+  }
+
+  .terms-confirm-panel {
+    margin-inline: 16px;
+  }
+
+  .terms-actions.premium-terms-actions {
+    flex-direction: column;
+    padding-inline: 16px;
+  }
+
+  .terms-close-btn,
+  .terms-accept-btn {
+    width: 100%;
+  }
+}
+
+/* PREMIUM RECENT ACTIVITY MODAL */
+
+.activity-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.22), transparent 34%),
+    rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.activity-modal-card {
+  width: min(920px, 100%);
+  max-height: min(88vh, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(219, 229, 243, 0.96);
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.activity-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 18px;
+  background:
+    linear-gradient(135deg, rgba(13, 70, 143, 0.98), rgba(10, 56, 116, 0.98)),
+    radial-gradient(
+      circle at top right,
+      rgba(147, 197, 253, 0.28),
+      transparent 38%
+    );
+  color: #ffffff;
+}
+
+.activity-modal-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.activity-modal-header h3 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.45px;
+}
+
+.activity-modal-header p {
+  margin: 8px 0 0;
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.activity-modal-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.activity-filter-panel {
+  margin: 18px 24px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.filter-field label {
+  color: #0f3d87;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.filter-field input,
+.filter-field select {
+  min-height: 42px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.clear-filter-btn {
+  min-height: 42px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f3d87;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.clear-filter-btn:hover {
+  background: #f8fbff;
+}
+
+.activity-count-row {
+  margin: 14px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.activity-count-row strong {
+  color: #0f3d87;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.activity-modal-list {
+  margin: 14px 24px 24px;
+  padding-right: 4px;
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.activity-modal-item {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.activity-modal-item:hover {
+  transform: translateY(-2px);
+  border-color: #bfdbfe;
+  background: #f8fbff;
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.09);
+}
+
+.activity-modal-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(145deg, #2563eb 0%, #0f3d87 100%);
+  box-shadow:
+    0 12px 22px rgba(29, 78, 216, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.activity-modal-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.activity-modal-copy {
+  min-width: 0;
+}
+
+.activity-modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.activity-modal-title-row strong {
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 950;
+}
+
+.activity-status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.activity-status-chip.completed,
+.activity-status-chip.submitted {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.activity-status-chip.review {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.activity-status-chip.viewed {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.activity-modal-copy p {
+  margin: 0;
+  color: #475569;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.activity-modal-meta {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.empty-activity-state {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 4px;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.empty-activity-state strong {
+  color: #0f172a;
+}
+
+:deep(.activity-modal-icon svg),
+.activity-icon svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 760px) {
+  .activity-modal-card {
+    max-height: 92vh;
+    border-radius: 22px;
+  }
+
+  .activity-filter-panel {
+    grid-template-columns: 1fr;
+    margin-inline: 16px;
+  }
+
+  .activity-count-row {
+    margin-inline: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activity-modal-list {
+    margin-inline: 16px;
+  }
+
+  .activity-modal-item {
+    grid-template-columns: 46px 1fr;
+  }
+
+  .activity-modal-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+  }
+
+  .activity-modal-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* PREMIUM FAQ MODAL */
+
+.faq-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1260;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.22), transparent 34%),
+    rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(10px);
+}
+
+.faq-modal-card {
+  width: min(940px, 100%);
+  max-height: min(88vh, 800px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(219, 229, 243, 0.96);
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.faq-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 18px;
+  background:
+    linear-gradient(135deg, rgba(13, 70, 143, 0.98), rgba(10, 56, 116, 0.98)),
+    radial-gradient(
+      circle at top right,
+      rgba(147, 197, 253, 0.28),
+      transparent 38%
+    );
+  color: #ffffff;
+}
+
+.faq-modal-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.faq-modal-header h3 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.45px;
+}
+
+.faq-modal-header p {
+  margin: 8px 0 0;
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.faq-modal-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.faq-tools {
+  margin: 18px 24px 0;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.faq-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: left;
+}
+
+.faq-search-field label {
+  color: #0f3d87;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.faq-search-field input {
+  min-height: 44px;
+  border: 1px solid #bfdbfe;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.faq-category-tabs {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.faq-category-tab {
+  min-height: 34px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f3d87;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.faq-category-tab.active,
+.faq-category-tab:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.faq-count-row {
+  margin: 14px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.faq-count-row button {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.faq-list {
+  margin: 14px 24px 18px;
+  padding-right: 4px;
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.faq-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+  overflow: hidden;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.faq-item:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.08);
+}
+
+.faq-question {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.faq-question-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.faq-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(145deg, #2563eb 0%, #0f3d87 100%);
+  box-shadow:
+    0 12px 22px rgba(29, 78, 216, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.faq-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.faq-question strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 950;
+}
+
+.faq-question small {
+  display: inline-flex;
+  margin-top: 5px;
+  min-height: 22px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faq-chevron {
+  color: #1d4ed8;
+  font-size: 28px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 0.18s ease;
+}
+
+.faq-chevron.open {
+  transform: rotate(90deg);
+}
+
+.faq-answer {
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 18px 18px 75px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.65;
+  background: #f8fbff;
+  text-align: left;
+}
+
+.empty-faq-state {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 4px;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.empty-faq-state strong {
+  color: #0f172a;
+}
+
+.faq-footer {
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 24px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.faq-footer button {
+  min-height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(29, 78, 216, 0.2);
+}
+
+@media (max-width: 760px) {
+  .faq-modal-card {
+    max-height: 92vh;
+    border-radius: 22px;
+  }
+
+  .faq-tools,
+  .faq-count-row,
+  .faq-list {
+    margin-inline: 16px;
+  }
+
+  .faq-question {
+    align-items: flex-start;
+  }
+
+  .faq-question-left {
+    align-items: flex-start;
+  }
+
+  .faq-answer {
+    padding: 14px 16px 18px;
+  }
+
+  .faq-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .faq-footer button {
+    width: 100%;
+  }
+}
+
+/* FAQ CLEANUP: ALL FAQ LABEL + NO CONTACT BUTTON INSIDE FAQ */
+
+.faq-note {
+  margin: 10px 24px 0;
+  padding: 12px 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 700;
+  text-align: left;
+}
+
+.faq-footer {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .faq-note {
+    margin-inline: 16px;
+  }
+}
+
+/* FINAL FAQ VISIBILITY FIX */
+
+.faq-list {
+  margin: 14px 24px 18px !important;
+  padding-right: 4px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  overflow-y: auto !important;
+  min-height: 260px !important;
+}
+
+.faq-item {
+  display: block !important;
+  width: 100% !important;
+  min-height: 78px !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+}
+
+.faq-question {
+  width: 100% !important;
+  min-height: 78px !important;
+  border: none !important;
+  background: #ffffff !important;
+  padding: 14px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.faq-question-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 13px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.faq-icon {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+  border-radius: 16px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #ffffff !important;
+  background: linear-gradient(145deg, #2563eb 0%, #0f3d87 100%) !important;
+  box-shadow:
+    0 12px 22px rgba(29, 78, 216, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+}
+
+.faq-icon svg {
+  width: 25px !important;
+  height: 25px !important;
+  display: block !important;
+  color: #ffffff !important;
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.faq-question strong {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+  font-weight: 950 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.faq-question small {
+  display: inline-flex !important;
+  margin-top: 5px !important;
+  min-height: 22px !important;
+  align-items: center !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.faq-chevron {
+  display: inline-flex !important;
+  width: 28px !important;
+  height: 28px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #1d4ed8 !important;
+  font-size: 28px !important;
+  line-height: 1 !important;
+  transform: rotate(0deg) !important;
+  transition: transform 0.18s ease !important;
+  opacity: 1 !important;
+}
+
+.faq-chevron.open {
+  transform: rotate(90deg) !important;
+}
+
+.faq-answer {
+  display: block !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 14px 18px 18px 77px !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  background: #f8fbff !important;
+  text-align: left !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+@media (max-width: 760px) {
+  .faq-list {
+    margin-inline: 16px !important;
+  }
+
+  .faq-question {
+    align-items: flex-start !important;
+  }
+
+  .faq-question-left {
+    align-items: flex-start !important;
+  }
+
+  .faq-answer {
+    padding: 14px 16px 18px !important;
+  }
+}
+
+/* FAQ EXPAND/COLLAPSE FIX */
+
+.faq-item.open {
+  border-color: #93c5fd !important;
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.12) !important;
+  background: #ffffff !important;
+}
+
+.faq-item.open .faq-question {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+.faq-item.open .faq-chevron {
+  transform: rotate(90deg) !important;
+}
+
+.faq-answer {
+  display: block !important;
+  width: 100% !important;
+  border-top: 1px solid #dbeafe !important;
+  padding: 16px 20px 18px 77px !important;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%) !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  text-align: left !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.faq-answer[style*="display: none"] {
+  display: none !important;
+}
+
+.faq-answer p {
+  margin: 0 !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  font-weight: 650 !important;
+}
+
+@media (max-width: 760px) {
+  .faq-answer {
+    padding: 14px 16px 18px !important;
+  }
+}
+
+/* FAQ DETAIL MODAL FIX: CLICK ROW OPENS FULL ANSWER */
+
+.faq-answer {
+  display: none !important;
+}
+
+.faq-question {
+  cursor: pointer !important;
+}
+
+.faq-item.open,
+.faq-item:hover {
+  border-color: #93c5fd !important;
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.12) !important;
+}
+
+.faq-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.22), transparent 34%),
+    rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(10px);
+}
+
+.faq-detail-card {
+  width: min(640px, 100%);
+  overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(219, 229, 243, 0.96);
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.faq-detail-header {
+  display: grid;
+  grid-template-columns: 58px 1fr 42px;
+  gap: 14px;
+  align-items: start;
+  padding: 22px;
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(13, 70, 143, 0.98), rgba(10, 56, 116, 0.98)),
+    radial-gradient(
+      circle at top right,
+      rgba(147, 197, 253, 0.28),
+      transparent 38%
+    );
+}
+
+.faq-detail-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.faq-detail-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.faq-detail-title-wrap {
+  min-width: 0;
+}
+
+.faq-detail-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.faq-detail-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1.22;
+  font-weight: 950;
+  letter-spacing: -0.3px;
+}
+
+.faq-detail-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.faq-detail-body {
+  padding: 24px;
+  text-align: left;
+}
+
+.faq-detail-body p {
+  margin: 0;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.75;
+  font-weight: 650;
+}
+
+.faq-detail-note {
+  margin-top: 18px;
+  padding: 15px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #f8fbff;
+  display: grid;
+  gap: 5px;
+}
+
+.faq-detail-note strong {
+  color: #0f3d87;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.faq-detail-note span {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 650;
+}
+
+.faq-detail-actions {
+  padding: 0 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.faq-detail-done {
+  min-width: 120px;
+  min-height: 44px;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(29, 78, 216, 0.22);
+}
+
+@media (max-width: 640px) {
+  .faq-detail-header {
+    grid-template-columns: 1fr 42px;
+  }
+
+  .faq-detail-icon {
+    display: none;
+  }
+
+  .faq-detail-actions {
+    display: block;
+  }
+
+  .faq-detail-done {
+    width: 100%;
   }
 }
 </style>
