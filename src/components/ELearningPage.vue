@@ -122,7 +122,7 @@
                   v-if="searchQuery"
                   type="button"
                   class="clear-btn"
-                  @click="searchQuery = ''"
+                  @click="clearSearch"
                 >
                   ×
                 </button>
@@ -132,12 +132,13 @@
             <div class="quick-tags">
               <button
                 v-for="tag in quickTags"
-                :key="tag"
+                :key="tag.label"
                 type="button"
                 class="tag-btn"
+                :class="{ active: isActiveTag(tag) }"
                 @click="applyQuickTag(tag)"
               >
-                {{ tag }}
+                {{ tag.label }}
               </button>
             </div>
           </div>
@@ -156,6 +157,81 @@
               <strong>{{ completedCount }}</strong>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section v-if="recentModules.length" class="recent-section">
+        <div class="section-title-row recent-title-row">
+          <div>
+            <span class="recent-kicker">Continue Learning</span>
+            <h2>Recently Accessed Courses</h2>
+            <p>
+              Resume the last courses you opened or previewed on this device.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="clear-recent-btn"
+            @click="clearRecentCourses"
+          >
+            Clear History
+          </button>
+        </div>
+
+        <div class="recent-course-grid">
+          <article
+            v-for="module in recentModules"
+            :key="`recent-${module.id}`"
+            class="recent-course-card"
+            :class="{ done: isCompleted(module.id) }"
+          >
+            <div
+              class="recent-course-image"
+              :style="{
+                backgroundImage: `linear-gradient(rgba(8,44,102,0.12), rgba(8,44,102,0.48)), url(${module.heroImage})`,
+              }"
+            >
+              <span class="recent-course-chip">Recently Accessed</span>
+            </div>
+
+            <div class="recent-course-body">
+              <div class="recent-course-meta">
+                <span>{{ module.category }}</span>
+                <span>{{ module.duration }}</span>
+              </div>
+
+              <h3>{{ module.title }}</h3>
+              <p>{{ module.description }}</p>
+
+              <div class="recent-progress-row">
+                <span
+                  class="completion-badge"
+                  :class="{ completed: isCompleted(module.id) }"
+                >
+                  {{ isCompleted(module.id) ? "Completed" : "In Progress" }}
+                </span>
+                <small>{{ module.lessons }} lessons</small>
+              </div>
+
+              <div class="recent-actions">
+                <button
+                  type="button"
+                  class="preview-btn"
+                  @click="previewLesson(module.id)"
+                >
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  class="module-btn"
+                  @click="openLesson(module.id)"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -536,18 +612,22 @@
             <p>
               {{ filteredModules.length }} course<span
                 v-if="filteredModules.length !== 1"
-              >
-                s</span
+                >s</span
               >
               found
+              <!-- ✅ Show active filter state so user always knows what's applied -->
+              <span v-if="activeFilterLabel" class="catalog-filter-label">
+                — {{ activeFilterLabel }}
+              </span>
             </p>
           </div>
 
           <div class="catalog-tools">
+            <!-- ✅ Category dropdown is now always in sync with the actual filter state -->
             <select
               v-model="selectedCategory"
               class="category-select"
-              @change="focusLearningCatalog"
+              @change="onCategoryChange"
             >
               <option value="ALL">All Categories</option>
               <option
@@ -558,6 +638,16 @@
                 {{ category }}
               </option>
             </select>
+
+            <!-- ✅ Clear all filters button — only shown when a filter is active -->
+            <button
+              v-if="hasActiveFilter"
+              type="button"
+              class="clear-filter-btn"
+              @click="clearAllFilters"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
 
@@ -634,6 +724,15 @@
         <div v-else class="empty-state">
           <h3>No lessons found</h3>
           <p>Try another keyword or choose a different category.</p>
+          <button
+            v-if="hasActiveFilter"
+            type="button"
+            class="clear-filter-btn"
+            style="margin-top: 14px"
+            @click="clearAllFilters"
+          >
+            Clear Filters
+          </button>
         </div>
       </section>
 
@@ -796,12 +895,25 @@ type ModuleItem = {
   images: string[];
 };
 
+// ─── Quick tag type ───────────────────────────────────────────────────────────
+// Each tag now carries both a display label AND an explicit filter mode:
+//   mode: "category" → set selectedCategory + clear searchQuery
+//   mode: "search"   → set searchQuery + reset selectedCategory to ALL
+// This keeps the dropdown and the search box always in sync.
+type QuickTag = {
+  label: string;
+  mode: "category" | "search";
+  value: string; // category name OR search term
+};
+
 const COMPLETED_KEY = "ltms_completed_lessons";
+const RECENT_KEY = "ltms_recent_courses";
 
 const router = useRouter();
 const searchQuery = ref("");
 const selectedCategory = ref("ALL");
 const completedLessons = ref<number[]>([]);
+const recentCourseIds = ref<number[]>([]);
 const selectedModuleId = ref<number | null>(1);
 const courseOverviewRef = ref<HTMLElement | null>(null);
 const learningCatalogRef = ref<HTMLElement | null>(null);
@@ -845,6 +957,25 @@ const mockImages = {
 const loadCompletedLessons = () => {
   const saved = localStorage.getItem(COMPLETED_KEY);
   completedLessons.value = saved ? JSON.parse(saved) : [];
+};
+
+const loadRecentCourses = () => {
+  const saved = localStorage.getItem(RECENT_KEY);
+  recentCourseIds.value = saved ? JSON.parse(saved) : [];
+};
+
+const saveRecentCourse = (id: number) => {
+  const updated = [
+    id,
+    ...recentCourseIds.value.filter((courseId) => courseId !== id),
+  ].slice(0, 5);
+  recentCourseIds.value = updated;
+  localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
+};
+
+const clearRecentCourses = () => {
+  recentCourseIds.value = [];
+  localStorage.removeItem(RECENT_KEY);
 };
 
 const delay = (ms: number) =>
@@ -911,6 +1042,7 @@ const logoutUser = async () => {
 
 onMounted(() => {
   loadCompletedLessons();
+  loadRecentCourses();
   window.addEventListener("storage", loadCompletedLessons);
   window.addEventListener(
     "ltms-progress-updated",
@@ -931,6 +1063,7 @@ onBeforeUnmount(() => {
 const openLesson = async (id: number) => {
   closeUserMenu();
   selectedModuleId.value = id;
+  saveRecentCourse(id);
 
   const started = await beginPageLoading();
   if (!started) return;
@@ -947,6 +1080,7 @@ const previewLesson = async (id: number) => {
 
   isPageLoading.value = true;
   selectedModuleId.value = id;
+  saveRecentCourse(id);
 
   await nextTick();
   courseOverviewRef.value?.scrollIntoView({
@@ -975,10 +1109,63 @@ const focusSearchResults = async () => {
   await focusLearningCatalog();
 };
 
-const applyQuickTag = async (tag: string) => {
-  searchQuery.value = tag;
-  selectedCategory.value = categories.value.includes(tag) ? tag : "ALL";
+// ─── FIXED: applyQuickTag ─────────────────────────────────────────────────────
+// Previously, tags like "Registration" and "Renewal" had no matching category,
+// so selectedCategory stayed "ALL" while searchQuery was set — the dropdown
+// showed "All Categories" even though a keyword filter was active.
+//
+// Now each QuickTag declares its own mode:
+//   "category" tags → set selectedCategory, clear searchQuery (dropdown reflects it)
+//   "search"   tags → set searchQuery, reset selectedCategory to ALL (search reflects it)
+// Either way the two controls are always consistent with each other.
+const applyQuickTag = async (tag: QuickTag) => {
+  if (tag.mode === "category") {
+    selectedCategory.value = tag.value;
+    searchQuery.value = "";
+  } else {
+    searchQuery.value = tag.value;
+    selectedCategory.value = "ALL";
+  }
   await focusLearningCatalog();
+};
+
+// ─── FIXED: onCategoryChange ──────────────────────────────────────────────────
+// When the user picks a category from the dropdown we clear the search query
+// so the two filters don't silently compound (old behaviour: picking "Law"
+// while "renewal" was in the search box would give a confusing double-filter).
+const onCategoryChange = async () => {
+  searchQuery.value = "";
+  await focusLearningCatalog();
+};
+
+// ─── Clear helpers ────────────────────────────────────────────────────────────
+const clearSearch = () => {
+  searchQuery.value = "";
+  // Do NOT reset the category — user may have set it via dropdown intentionally.
+};
+
+const clearAllFilters = async () => {
+  searchQuery.value = "";
+  selectedCategory.value = "ALL";
+  await focusLearningCatalog();
+};
+
+// ─── Derived filter state ─────────────────────────────────────────────────────
+const hasActiveFilter = computed(
+  () => searchQuery.value.trim() !== "" || selectedCategory.value !== "ALL",
+);
+
+const activeFilterLabel = computed(() => {
+  const parts: string[] = [];
+  if (selectedCategory.value !== "ALL") parts.push(selectedCategory.value);
+  if (searchQuery.value.trim()) parts.push(`"${searchQuery.value.trim()}"`);
+  return parts.join(", ");
+});
+
+// ─── isActiveTag helper for quick tag highlight ───────────────────────────────
+const isActiveTag = (tag: QuickTag): boolean => {
+  if (tag.mode === "category") return selectedCategory.value === tag.value;
+  return searchQuery.value.trim().toLowerCase() === tag.value.toLowerCase();
 };
 
 const goToELearning = async () => {
@@ -1019,9 +1206,22 @@ const goToDashboard = async () => {
 
 const goToContact = async () => {
   closeUserMenu();
+
+  const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-  await endPageLoading(280);
+
+  if (currentPath === "/contact") {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push("/contact");
+  } catch {
+    endPageLoading();
+  }
 };
 
 const openOfficialWebsite = async () => {
@@ -1037,6 +1237,12 @@ const openOfficialWebsite = async () => {
 const isCompleted = (id: number) => completedLessons.value.includes(id);
 
 const completedCount = computed(() => completedLessons.value.length);
+
+const recentModules = computed(() => {
+  return recentCourseIds.value
+    .map((id) => modules.value.find((module) => module.id === id))
+    .filter((module): module is ModuleItem => Boolean(module));
+});
 
 const modules = ref<ModuleItem[]>([
   {
@@ -1960,12 +2166,16 @@ const modules = ref<ModuleItem[]>([
   },
 ]);
 
-const quickTags = [
-  "Licensing",
-  "Road Safety",
-  "Registration",
-  "Renewal",
-  "Law",
+// ─── FIXED: quickTags now use the QuickTag type ───────────────────────────────
+// "Licensing" and "Road Safety" and "Law" are real category names → mode: "category"
+// "Registration" and "Renewal" are keyword searches, not categories → mode: "search"
+// This ensures the dropdown and search box are always consistent.
+const quickTags: QuickTag[] = [
+  { label: "Licensing", mode: "category", value: "Licensing" },
+  { label: "Road Safety", mode: "category", value: "Road Safety" },
+  { label: "Law", mode: "category", value: "Law" },
+  { label: "Registration", mode: "search", value: "registration" },
+  { label: "Renewal", mode: "search", value: "renewal" },
 ];
 
 const supplementalVideos = ref([
@@ -2042,6 +2252,14 @@ const officialLearningHighlights = computed(() => [
   },
 ]);
 
+// ─── FIXED: filteredModules ───────────────────────────────────────────────────
+// Previously both searchQuery and selectedCategory could be active at the same
+// time (e.g. picking "Renewal" tag set searchQuery="Renewal" but left
+// selectedCategory="ALL", while manually picking "Licensing" from dropdown left
+// whatever searchQuery was still set). Now the two controls are always mutually
+// reset by applyQuickTag / onCategoryChange / clearSearch, so they never
+// silently compound. The computed below is unchanged — it already handles both
+// filters independently; the fix was upstream in how they're set.
 const filteredModules = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
@@ -2507,9 +2725,21 @@ const filteredModules = computed(() => {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* ✅ Active quick tag gets a solid highlight so the user knows it's selected */
+.tag-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
 }
 
 .featured-section,
+.recent-section,
 .details-section,
 .highlights-section,
 .catalog-section,
@@ -2520,6 +2750,145 @@ const filteredModules = computed(() => {
   border-radius: 24px;
   padding: 28px;
   box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+}
+
+.recent-section {
+  border: 1px solid #d9e7fb;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(31, 95, 183, 0.09),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.recent-title-row {
+  align-items: flex-start;
+}
+
+.recent-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e9f0ff;
+  color: #1f4fb8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.clear-recent-btn {
+  min-height: 40px;
+  border: 1px solid #d7dfeb;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1f4fb8;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.recent-course-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.recent-course-card {
+  overflow: hidden;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #dfe8f5;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+}
+
+.recent-course-card.done {
+  border-color: #b7e1c5;
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.08);
+}
+
+.recent-course-image {
+  position: relative;
+  height: 132px;
+  background-size: cover;
+  background-position: center;
+}
+
+.recent-course-chip {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #154b96;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.recent-course-body {
+  padding: 16px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.recent-course-meta,
+.recent-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.recent-course-meta span,
+.recent-progress-row small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.recent-course-card h3 {
+  margin: 14px 0 8px;
+  color: #1f2937;
+  font-size: 18px;
+  line-height: 1.22;
+}
+
+.recent-course-card p {
+  margin: 0;
+  color: #667085;
+  font-size: 13.5px;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.recent-progress-row {
+  margin-top: 16px;
+}
+
+.recent-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.recent-actions .preview-btn,
+.recent-actions .module-btn {
+  flex: 1;
 }
 
 .section-title-row,
@@ -2543,6 +2912,12 @@ const filteredModules = computed(() => {
   margin: 6px 0 0;
   color: #6b7280;
   font-size: 14px;
+}
+
+/* ✅ Inline filter label shown next to the course count */
+.catalog-filter-label {
+  color: #1f4fb8;
+  font-weight: 800;
 }
 
 .featured-grid {
@@ -2705,6 +3080,24 @@ const filteredModules = computed(() => {
   padding: 0 12px;
   font-size: 14px;
   color: #334155;
+}
+
+/* ✅ Clear filters button */
+.clear-filter-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #d7dfeb;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f4fb8;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clear-filter-btn:hover {
+  background: #f0f5ff;
 }
 
 .details-grid {
@@ -3199,205 +3592,11 @@ const filteredModules = computed(() => {
   color: #1f2937;
 }
 
-.lesson-module-copy p,
-.quiz-preview-card ul,
-.topic-video-copy {
-  margin: 0;
-  color: #667085;
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.topic-video-description {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.lesson-module-time {
-  font-size: 12px;
-  font-weight: 800;
-  color: #64748b;
-}
-
-.quiz-preview-card ul {
-  padding-left: 18px;
-}
-
-.quiz-preview-card li {
-  margin-bottom: 8px;
-}
-
-.details-actions {
-  margin-top: 18px;
-}
-
-.details-side-card {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.full-media-panel {
-  min-height: 100%;
-}
-
-.topic-video-hero {
-  border: 1px solid #e5eaf2;
-  border-radius: 18px;
-  overflow: hidden;
-  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
-}
-
-.topic-video-hero-frame {
-  position: relative;
-  padding-top: 56.25%;
-  background: #dbe7f6;
-}
-
-.topic-video-hero-frame iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.topic-video-hero-copy {
-  padding: 16px;
-}
-
-.topic-video-hero-copy h5 {
-  margin: 0 0 8px;
-  font-size: 19px;
-  color: #1f2937;
-}
-
-.topic-video-hero-copy p {
-  margin: 0;
-  color: #667085;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.hero-badge {
-  margin-bottom: 10px;
-}
-
-.topic-video-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.topic-video-stat {
-  border: 1px solid #e5eaf2;
-  border-radius: 14px;
-  padding: 14px;
-  background: #fbfdff;
-}
-
-.topic-video-stat span {
-  display: block;
-  margin-bottom: 6px;
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.topic-video-stat strong {
-  color: #163d7b;
-  font-size: 18px;
-}
-
-.topic-video-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.topic-video-card {
-  border: 1px solid #e5eaf2;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.topic-video-card.compact {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  align-items: stretch;
-}
-
-.topic-video-frame {
-  position: relative;
-  padding-top: 56.25%;
-  background: #dbe7f6;
-}
-
-.topic-video-frame iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.topic-video-frame.compact-frame {
-  padding-top: 0;
-  min-height: 140px;
-}
-
-.topic-video-copy {
-  padding: 14px;
-}
-
-.topic-video-copy.compact-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.topic-video-copy h5 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  color: #1f2937;
-}
-
 .side-card-header p {
   margin: 0;
   color: #64748b;
   line-height: 1.55;
   font-size: 14px;
-}
-
-.topic-video-card {
-  border: 1px solid #e5eaf2;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.topic-video-frame {
-  position: relative;
-  padding-top: 56.25%;
-  background: #dbe7f6;
-}
-
-.topic-video-frame iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.topic-video-copy {
-  padding: 14px;
 }
 
 .video-badge {
@@ -3757,6 +3956,7 @@ const filteredModules = computed(() => {
 
 @media (max-width: 1400px) {
   .featured-grid,
+  .recent-course-grid,
   .module-grid,
   .video-grid,
   .photo-grid {
@@ -3815,6 +4015,7 @@ const filteredModules = computed(() => {
   }
 
   .featured-grid,
+  .recent-course-grid,
   .video-grid,
   .photo-grid {
     grid-template-columns: 1fr;
@@ -3829,6 +4030,7 @@ const filteredModules = computed(() => {
 
   .hero-grid,
   .featured-section,
+  .recent-section,
   .details-section,
   .highlights-section,
   .catalog-section,
@@ -3838,6 +4040,7 @@ const filteredModules = computed(() => {
   }
 
   .featured-grid,
+  .recent-course-grid,
   .module-grid {
     grid-template-columns: 1fr;
   }
@@ -3848,7 +4051,12 @@ const filteredModules = computed(() => {
     align-items: stretch;
   }
 
-  .category-select {
+  .catalog-tools {
+    flex-wrap: wrap;
+  }
+
+  .category-select,
+  .clear-filter-btn {
     width: 100%;
   }
 

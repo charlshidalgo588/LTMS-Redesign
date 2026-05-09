@@ -3,7 +3,10 @@ import { createRouter, createWebHistory } from "vue-router";
 import Landingpage from "../components/Landingpage.vue";
 import Homepage from "../components/Homepage.vue";
 import LicensingPage from "../components/LicensingPage.vue";
-import VehiclePage from "../components/VehiclePage.vue"; // ✅ ADD THIS
+import VehiclePage from "../components/VehiclePage.vue";
+import TransactionPage from "../components/TransactionPage.vue";
+import ViolationsPage from "../components/ViolationsPage.vue";
+import DocumentsPage from "../components/DocumentsPage.vue"; // ✅ ADD THIS
 import ELearningPage from "../components/ELearningPage.vue";
 import ELearningLessonPage from "../components/ELearningLessonPage.vue";
 import ProfilePage from "../components/ProfilePage.vue";
@@ -26,13 +29,35 @@ const routes = [
     component: LicensingPage,
   },
 
-  // ✅ VEHICLE PAGE (CONNECTED TO HOMEPAGE CARD)
+  // ✅ VEHICLE
   {
     path: "/vehicle",
     name: "Vehicle",
     component: VehiclePage,
   },
 
+  // ✅ TRANSACTIONS
+  {
+    path: "/transactions",
+    name: "Transactions",
+    component: TransactionPage,
+  },
+
+  // ✅ VIOLATIONS
+  {
+    path: "/violations",
+    name: "Violations",
+    component: ViolationsPage,
+  },
+
+  // ✅ NEW: DOCUMENTS
+  {
+    path: "/documents",
+    name: "Documents",
+    component: DocumentsPage,
+  },
+
+  // ✅ E-LEARNING
   {
     path: "/e-learning",
     name: "ELearning",
@@ -43,6 +68,8 @@ const routes = [
     name: "ELearningLesson",
     component: ELearningLessonPage,
   },
+
+  // ✅ USER
   {
     path: "/profile",
     name: "Profile",
@@ -54,7 +81,7 @@ const routes = [
     component: ContactPage,
   },
 
-  // ✅ OPTIONAL (PREMIUM UX): fallback route
+  // ✅ fallback
   {
     path: "/:pathMatch(.*)*",
     redirect: "/home",

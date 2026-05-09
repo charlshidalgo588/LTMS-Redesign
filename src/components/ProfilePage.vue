@@ -127,22 +127,115 @@
           </div>
         </article>
 
-        <article class="hero-card metric-card">
-          <span class="metric-label">License Type</span>
-          <strong class="metric-value">{{ form.licenseType }}</strong>
-          <span class="metric-sub">Official record classification</span>
+        <article class="hero-card credential-card license-card">
+          <div class="credential-topline">
+            <span class="credential-icon">DL</span>
+            <span class="credential-status">Active Record</span>
+          </div>
+          <div class="credential-body">
+            <span class="metric-label">License Type</span>
+            <strong class="metric-value">{{ form.licenseType }}</strong>
+            <span class="metric-sub"
+              >Official driver classification on file</span
+            >
+          </div>
+          <div class="credential-footer">
+            <span>Record source</span>
+            <strong>LTMS Licensing Registry</strong>
+          </div>
         </article>
 
-        <article class="hero-card metric-card">
-          <span class="metric-label">Restrictions</span>
-          <strong class="metric-value">{{ form.restrictions }}</strong>
-          <span class="metric-sub">Registered driving codes</span>
+        <article class="hero-card credential-card restriction-card">
+          <div class="credential-topline">
+            <span class="credential-icon">RC</span>
+            <span class="credential-status">Driving Codes</span>
+          </div>
+          <div class="credential-body">
+            <span class="metric-label">Restrictions</span>
+            <strong class="metric-value code-value">{{
+              form.restrictions
+            }}</strong>
+            <span class="metric-sub"
+              >Registered vehicle categories allowed</span
+            >
+          </div>
+          <div class="credential-footer">
+            <span>Coverage</span>
+            <strong>Motorcycle / Light Vehicle</strong>
+          </div>
         </article>
 
-        <article class="hero-card metric-card">
-          <span class="metric-label">Validity</span>
-          <strong class="metric-value">{{ formattedValidUntil }}</strong>
-          <span class="metric-sub">License expiration date</span>
+        <article class="hero-card credential-card validity-card">
+          <div class="credential-topline">
+            <span class="credential-icon">EX</span>
+            <span class="credential-status">Valid Until</span>
+          </div>
+          <div class="credential-body">
+            <span class="metric-label">Validity</span>
+            <strong class="metric-value">{{ formattedValidUntil }}</strong>
+            <span class="metric-sub">License expiration date</span>
+          </div>
+          <div class="credential-footer">
+            <span>Renewal reminder</span>
+            <strong>Review before expiry</strong>
+          </div>
+        </article>
+      </section>
+
+      <section
+        class="profile-card-deck"
+        aria-label="Profile record quick cards"
+      >
+        <article class="record-card record-card-primary">
+          <div class="record-card-top">
+            <span class="record-icon">ID</span>
+            <span class="record-chip">Primary</span>
+          </div>
+          <h3>Identity Record</h3>
+          <p>{{ form.licenseNumber }}</p>
+          <div class="record-card-footer">
+            <span>Client ID</span>
+            <strong>{{ form.clientId }}</strong>
+          </div>
+        </article>
+
+        <article class="record-card">
+          <div class="record-card-top">
+            <span class="record-icon">CN</span>
+            <span class="record-chip muted">Contact</span>
+          </div>
+          <h3>Contact Verification</h3>
+          <p>{{ contactVerificationStatus }}</p>
+          <div class="record-card-footer">
+            <span>Registered mobile</span>
+            <strong>{{ form.mobile || "Not provided" }}</strong>
+          </div>
+        </article>
+
+        <article class="record-card">
+          <div class="record-card-top">
+            <span class="record-icon">EC</span>
+            <span class="record-chip muted">Safety</span>
+          </div>
+          <h3>Emergency Contact</h3>
+          <p>{{ emergencyRecordStatus }}</p>
+          <div class="record-card-footer">
+            <span>Contact person</span>
+            <strong>{{ form.emergencyName || "Not provided" }}</strong>
+          </div>
+        </article>
+
+        <article class="record-card">
+          <div class="record-card-top">
+            <span class="record-icon">AD</span>
+            <span class="record-chip muted">Address</span>
+          </div>
+          <h3>Address Record</h3>
+          <p>{{ addressRecordStatus }}</p>
+          <div class="record-card-footer">
+            <span>Registered city</span>
+            <strong>{{ form.cityMunicipality || "Not provided" }}</strong>
+          </div>
         </article>
       </section>
 
@@ -224,6 +317,29 @@
 
             <div v-else class="validation-ok">
               All required profile sections are complete and valid.
+            </div>
+          </article>
+
+          <article class="panel-card section-map-card">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Section map</span>
+                <h2>Profile Cards</h2>
+              </div>
+            </div>
+
+            <div class="section-map-list">
+              <button
+                v-for="tab in tabs.filter((item) => item !== 'Show All')"
+                :key="tab"
+                type="button"
+                class="section-map-row"
+                :class="{ active: activeTab === tab }"
+                @click="goToTab(tab)"
+              >
+                <span>{{ tab }}</span>
+                <strong>{{ sectionStatusText(tab) }}</strong>
+              </button>
             </div>
           </article>
         </aside>
@@ -1200,6 +1316,40 @@ const formattedValidUntil = computed(() => {
       });
 });
 
+const contactVerificationStatus = computed(() => {
+  const hasContactErrors = Boolean(errors.email || errors.mobile);
+  if (hasContactErrors) return "Needs update";
+  if (form.email && form.mobile) return "Verified on record";
+  return "Incomplete";
+});
+
+const emergencyRecordStatus = computed(() => {
+  if (
+    errors.emergencyName ||
+    errors.emergencyNumber ||
+    errors.emergencyAddress
+  ) {
+    return "Needs review";
+  }
+  return form.emergencyName && form.emergencyNumber
+    ? "Ready for emergency use"
+    : "Incomplete";
+});
+
+const addressRecordStatus = computed(() => {
+  const addressFields = [
+    form.houseNo,
+    form.street,
+    form.barangay,
+    form.cityMunicipality,
+    form.province,
+    form.zipCode,
+  ];
+  return addressFields.every((value) => value.trim())
+    ? "Complete address"
+    : "Review required";
+});
+
 const shortAddress = computed(() =>
   [
     form.houseNo,
@@ -1485,10 +1635,21 @@ const goToSettings = async () => {
 
 const goToContact = async () => {
   closeUserMenu();
+  const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-  await delay(280);
-  endPageLoading();
+
+  if (currentPath === "/contact") {
+    await delay(280);
+    endPageLoading();
+    return;
+  }
+
+  try {
+    await router.push("/contact");
+  } catch {
+    endPageLoading();
+  }
 };
 
 const openOfficialWebsite = async () => {
@@ -1839,14 +2000,14 @@ input {
 }
 
 .main-shell {
-  width: min(1480px, calc(100vw - 36px));
+  width: min(1680px, calc(100vw - 32px));
   margin: 0 auto;
   padding: 26px 0 130px;
 }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(3, minmax(180px, 1fr));
+  grid-template-columns: minmax(520px, 1.65fr) repeat(3, minmax(250px, 1fr));
   gap: 18px;
   margin-bottom: 22px;
 }
@@ -2007,40 +2168,160 @@ input {
   line-height: 1.6;
 }
 
-.metric-card {
-  padding: 20px;
+.credential-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 238px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(31, 95, 183, 0.12),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.99) 0%,
+      rgba(248, 251, 255, 0.98) 100%
+    );
+  border: 1px solid #dbe5f2;
+  box-shadow:
+    0 20px 42px rgba(15, 23, 42, 0.085),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.credential-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: linear-gradient(180deg, #0d468f 0%, #1f5fb7 100%);
+  opacity: 0.95;
+}
+
+.credential-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.credential-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #eef4ff 0%, #dfeaff 100%);
+  color: #154b96;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.credential-status {
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  min-height: 176px;
+  background: #f5f8fc;
+  border: 1px solid #e1e9f5;
+  color: #49627d;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.credential-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 9px;
+  margin: 18px 0;
 }
 
 .metric-label {
   color: #64748b;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 10px;
+  letter-spacing: 0.09em;
 }
 
 .metric-value {
-  color: #153a72;
-  font-size: 26px;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  color: #102f63;
+  font-size: clamp(28px, 2.25vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.metric-value.code-value {
+  font-size: clamp(34px, 3vw, 46px);
 }
 
 .metric-sub {
   color: #64748b;
-  font-size: 13px;
-  margin-top: 10px;
+  font-size: 14px;
   line-height: 1.5;
+  max-width: 260px;
+}
+
+.credential-footer {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  padding-top: 14px;
+  border-top: 1px solid #e6edf6;
+}
+
+.credential-footer span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.credential-footer strong {
+  color: #153a72;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.credential-card:hover {
+  transform: translateY(-2px);
+  border-color: #c5d5ea;
+  box-shadow:
+    0 24px 50px rgba(15, 23, 42, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.license-card .credential-icon {
+  color: #0d468f;
+}
+
+.restriction-card::before {
+  background: linear-gradient(180deg, #153a72 0%, #476995 100%);
+}
+
+.validity-card::before {
+  background: linear-gradient(180deg, #0f438e 0%, #7aa3d9 100%);
 }
 
 .content-grid {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: 390px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -2559,7 +2840,192 @@ input {
   transform: translateY(-8px);
 }
 
+.profile-card-deck {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.record-card {
+  min-height: 190px;
+  padding: 20px;
+  border-radius: 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(248, 251, 255, 0.96)
+  );
+  border: 1px solid #dce4ef;
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.075),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.record-card-primary {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(31, 95, 183, 0.2),
+      transparent 34%
+    ),
+    linear-gradient(135deg, #0d3273 0%, #154b96 58%, #1f5fb7 100%);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.record-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.record-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #eef4ff;
+  color: #154b96;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.record-card-primary .record-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.record-chip {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.record-chip.muted {
+  background: #f3f7fd;
+  color: #49627d;
+  border-color: #e1e9f5;
+}
+
+.record-card h3 {
+  margin: 0 0 8px;
+  color: inherit;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.record-card p {
+  margin: 0;
+  color: inherit;
+  opacity: 0.78;
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 42px;
+}
+
+.record-card-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(100, 116, 139, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.record-card-primary .record-card-footer {
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
+
+.record-card-footer span {
+  color: inherit;
+  opacity: 0.68;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.record-card-footer strong {
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.section-map-list {
+  display: grid;
+  gap: 10px;
+}
+
+.section-map-row {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid #e2e9f3;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  color: #29425f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.section-map-row:hover,
+.section-map-row.active {
+  border-color: #b8cae6;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.section-map-row span {
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.section-map-row strong {
+  font-size: 11px;
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-section {
+  box-shadow:
+    0 12px 24px rgba(15, 23, 42, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.sub-card {
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.035);
+}
+
 @media (max-width: 1240px) {
+  .profile-card-deck {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .hero-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -2575,6 +3041,10 @@ input {
 }
 
 @media (max-width: 900px) {
+  .profile-card-deck {
+    grid-template-columns: 1fr;
+  }
+
   .topbar {
     min-height: auto;
     flex-direction: column;
