@@ -13,25 +13,70 @@
     </div>
 
     <header class="topbar">
-      <button class="brand-wrap" type="button" @click="goToDashboard">
-        <img class="brand-logo" :src="logo" alt="LTO Logo" />
-        <div class="brand-copy">
-          <span class="brand-kicker">LTMS PORTAL</span>
-          <span class="brand-text">CONTACT</span>
-        </div>
+      <div class="topbar-left">
+        <button class="brand-wrap" type="button" @click="goToDashboard">
+          <img class="brand-logo" :src="logo" alt="LTO Logo" />
+          <div class="brand-copy">
+            <span class="brand-kicker">LTMS PORTAL</span>
+            <span class="brand-text">CONTACT</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click="showMobileNav = !showMobileNav"
+      >
+        <span></span><span></span><span></span>
       </button>
 
-      <nav class="topbar-nav" aria-label="Main navigation">
-        <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
+      <nav
+        class="topbar-nav"
+        :class="{ 'mobile-open': showMobileNav }"
+        aria-label="Main navigation"
+      >
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            openOfficialWebsite();
+            showMobileNav = false;
+          "
+        >
           LTO OFFICIAL WEBPAGE
         </a>
-        <a href="#" class="nav-item" @click.prevent="goToELearning">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToELearning();
+            showMobileNav = false;
+          "
+        >
           E-LEARNING
         </a>
-        <a href="#" class="nav-item active" @click.prevent="goToContact">
+        <a
+          href="#"
+          class="nav-item active contact-active"
+          @click.prevent="
+            goToContact();
+            showMobileNav = false;
+          "
+        >
           CONTACT
         </a>
-        <a href="#" class="nav-item" @click.prevent="goToDashboard">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToDashboard();
+            showMobileNav = false;
+          "
+        >
           DASHBOARD
         </a>
       </nav>
@@ -244,7 +289,6 @@
                   <span>Full Name</span>
                   <input v-model="inquiry.fullName" type="text" />
                 </label>
-
                 <label class="field">
                   <span>Contact Number</span>
                   <input v-model="inquiry.mobile" type="text" />
@@ -299,6 +343,7 @@
       <div class="footer-right">Official LTMS Prototype</div>
     </footer>
 
+    <!-- Live Chat Modal -->
     <div
       v-if="showLiveChatModal"
       class="modal-overlay chat-overlay"
@@ -314,7 +359,6 @@
               <strong>{{ liveChatTicket }}</strong>
             </p>
           </div>
-
           <button
             type="button"
             class="modal-close-btn"
@@ -331,7 +375,6 @@
               <strong>Select Queue</strong>
               <span>{{ estimatedWait }} average wait</span>
             </div>
-
             <button
               v-for="queue in liveChatQueues"
               :key="queue"
@@ -364,7 +407,6 @@
                 <small>{{ message.time }}</small>
                 <p>{{ message.text }}</p>
               </div>
-
               <div v-if="isAgentTyping" class="typing-indicator">
                 <span></span><span></span><span></span>
                 Agent is typing
@@ -407,6 +449,7 @@
       </div>
     </div>
 
+    <!-- Logout Modal -->
     <div
       v-if="showLogoutModal"
       class="modal-overlay"
@@ -420,7 +463,6 @@
           You are about to end your current session and return to the landing
           page.
         </p>
-
         <div class="logout-modal-actions">
           <button type="button" class="outline-btn" @click="cancelLogout">
             Cancel
@@ -432,6 +474,7 @@
       </div>
     </div>
 
+    <!-- Settings Modal -->
     <div
       v-if="showSettingsModal"
       class="modal-overlay"
@@ -451,7 +494,6 @@
             ×
           </button>
         </div>
-
         <div class="settings-modal-body">
           <div class="settings-option-card">
             <div>
@@ -463,7 +505,6 @@
               <span class="slider"></span>
             </label>
           </div>
-
           <div class="settings-option-card">
             <div>
               <strong>Larger Text</strong>
@@ -477,7 +518,6 @@
               <span class="slider"></span>
             </label>
           </div>
-
           <div class="settings-option-card">
             <div>
               <strong>Reduced Motion</strong>
@@ -491,7 +531,6 @@
               <span class="slider"></span>
             </label>
           </div>
-
           <div class="settings-option-card">
             <div>
               <strong>High Contrast</strong>
@@ -506,7 +545,6 @@
             </label>
           </div>
         </div>
-
         <button
           type="button"
           class="settings-done-btn"
@@ -537,6 +575,7 @@ const { settings: accessibilitySettings, loadAccessibilitySettings } =
   useAccessibility();
 
 const showUserMenu = ref(false);
+const showMobileNav = ref(false);
 const showLogoutModal = ref(false);
 const showSettingsModal = ref(false);
 const showLiveChatModal = ref(false);
@@ -682,10 +721,7 @@ const delay = (ms: number) =>
 
 const makeTicket = (prefix = "LTO") => {
   const now = new Date();
-  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
-    2,
-    "0",
-  )}${String(now.getDate()).padStart(2, "0")}`;
+  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
   const random = Math.floor(1000 + Math.random() * 9000);
   return `${prefix}-${date}-${random}`;
 };
@@ -718,6 +754,7 @@ const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
   isPageLoading.value = true;
   showUserMenu.value = false;
+  showMobileNav.value = false;
   showLogoutModal.value = false;
   showSettingsModal.value = false;
   showLiveChatModal.value = false;
@@ -730,12 +767,10 @@ const beginPageLoading = async () => {
 const endPageLoading = () => {
   isPageLoading.value = false;
 };
-
 const toggleUserMenu = () => {
   if (isPageLoading.value) return;
   showUserMenu.value = !showUserMenu.value;
 };
-
 const closeUserMenu = () => {
   showUserMenu.value = false;
 };
@@ -744,17 +779,14 @@ const openSettingsModal = () => {
   closeUserMenu();
   showSettingsModal.value = true;
 };
-
 const closeSettingsModal = () => {
   if (isPageLoading.value) return;
   showSettingsModal.value = false;
 };
-
 const selectConcernCategory = (category: string) => {
   inquiry.category = category;
   window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 };
-
 const getQueueDescription = (queue: string) =>
   queueDescriptions[queue] || queueDescriptions["General Assistance"];
 
@@ -798,7 +830,6 @@ const startLiveChat = async (queue: string) => {
 const sendLiveChatMessage = async () => {
   const message = liveChatInput.value.trim();
   if (!message || isAgentTyping.value) return;
-
   liveChatConversation.value.push({
     sender: "user",
     text: message,
@@ -806,16 +837,13 @@ const sendLiveChatMessage = async () => {
   });
   liveChatInput.value = "";
   await scrollChatToBottom();
-
   isAgentTyping.value = true;
   await delay(850);
   isAgentTyping.value = false;
-
   const normalized = message.toLowerCase();
   const matched = mockReplies.find((item) =>
     item.keywords.some((keyword) => normalized.includes(keyword)),
   );
-
   liveChatConversation.value.push({
     sender: "agent",
     time: currentTime(),
@@ -823,7 +851,6 @@ const sendLiveChatMessage = async () => {
       matched?.reply ||
       "Thank you. To proceed, please provide your client ID, concern category, and any transaction or reference number. I can then guide you to the correct next step.",
   });
-
   await scrollChatToBottom();
 };
 
@@ -842,7 +869,6 @@ const requestLogout = () => {
   closeUserMenu();
   showLogoutModal.value = true;
 };
-
 const cancelLogout = () => {
   if (isPageLoading.value) return;
   showLogoutModal.value = false;
@@ -852,7 +878,6 @@ const logoutUser = async () => {
   showLogoutModal.value = false;
   const started = await beginPageLoading();
   if (!started) return;
-
   try {
     localStorage.clear();
     sessionStorage.clear();
@@ -866,7 +891,6 @@ const goToProfile = async () => {
   closeUserMenu();
   const started = await beginPageLoading();
   if (!started) return;
-
   try {
     await router.push("/profile");
   } catch {
@@ -878,13 +902,11 @@ const goToELearning = async () => {
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-
   if (currentPath === "/e-learning") {
     await delay(280);
     endPageLoading();
     return;
   }
-
   try {
     await router.push("/e-learning");
   } catch {
@@ -896,13 +918,11 @@ const goToDashboard = async () => {
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-
   if (currentPath === "/home") {
     await delay(280);
     endPageLoading();
     return;
   }
-
   try {
     await router.push("/home");
   } catch {
@@ -914,13 +934,11 @@ const goToContact = async () => {
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-
   if (currentPath === "/contact") {
     await delay(280);
     endPageLoading();
     return;
   }
-
   try {
     await router.push("/contact");
   } catch {
@@ -932,7 +950,6 @@ const openOfficialWebsite = async () => {
   closeUserMenu();
   const started = await beginPageLoading();
   if (!started) return;
-
   await delay(180);
   window.open("https://lto.gov.ph", "_blank", "noopener,noreferrer");
   await delay(160);
@@ -943,9 +960,7 @@ const submitInquiry = async () => {
   if (isSubmitting.value) return;
   isSubmitting.value = true;
   submitMessage.value = "";
-
   await delay(900);
-
   isSubmitting.value = false;
   generatedTicket.value = makeTicket("REQ");
   submitMessage.value =
@@ -957,7 +972,6 @@ onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
   loadAccessibilitySettings();
 });
-
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
 });
@@ -1006,7 +1020,6 @@ watch(
   background: rgba(237, 241, 244, 0.56);
   backdrop-filter: blur(4px);
 }
-
 .page-loading-card {
   display: inline-flex;
   align-items: center;
@@ -1018,7 +1031,6 @@ watch(
   border: 1px solid #d9e6f7;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
-
 .page-loading-spinner {
   width: 18px;
   height: 18px;
@@ -1027,19 +1039,18 @@ watch(
   border-top-color: #1f5fb7;
   animation: spin 0.85s linear infinite;
 }
-
 .page-loading-text {
   color: #154b96;
   font-size: 14px;
   font-weight: 800;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
+/* ── TOPBAR ── */
 .topbar {
   min-height: 72px;
   background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
@@ -1047,11 +1058,15 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
   padding: 0 28px;
   box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
 }
-
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .brand-wrap {
   display: flex;
   align-items: center;
@@ -1061,20 +1076,17 @@ watch(
   padding: 0;
   cursor: pointer;
 }
-
 .brand-logo {
   width: 38px;
   height: 38px;
   border-radius: 50%;
   object-fit: contain;
 }
-
 .brand-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
-
 .brand-kicker {
   font-size: 10px;
   font-weight: 800;
@@ -1082,20 +1094,18 @@ watch(
   opacity: 0.88;
   color: #fff;
 }
-
 .brand-text {
   font-size: 20px;
   font-weight: 800;
   color: #fff;
 }
-
 .topbar-nav {
   display: flex;
   align-items: center;
   gap: 22px;
 }
-
 .nav-item {
+  position: relative;
   color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
   font-size: 13px;
@@ -1104,21 +1114,70 @@ watch(
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid transparent;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
-
-.nav-item:hover,
+.nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
 .nav-item.active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 22px rgba(4, 20, 52, 0.22);
+}
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffffff 0%, #cfe0ff 100%);
+  opacity: 0.95;
 }
 
+/* ── MOBILE NAV HAMBURGER ── */
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  order: 3;
+}
+.mobile-nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: 0.2s ease;
+}
+
+/* ── USER MENU ── */
 .user-menu {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 .user-menu-trigger {
   display: inline-flex;
   align-items: center;
@@ -1131,7 +1190,6 @@ watch(
   color: #fff;
   cursor: pointer;
 }
-
 .user-avatar {
   width: 30px;
   height: 30px;
@@ -1142,31 +1200,26 @@ watch(
   font-size: 13px;
   font-weight: 800;
 }
-
 .user-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   line-height: 1.15;
 }
-
 .user-name {
   font-size: 12px;
   font-weight: 800;
 }
-
 .user-id {
   font-size: 11px;
   font-weight: 700;
   opacity: 0.84;
   white-space: nowrap;
 }
-
 .user-caret {
   width: 14px;
   height: 14px;
 }
-
 .user-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -1179,7 +1232,6 @@ watch(
   box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
   z-index: 40;
 }
-
 .user-dropdown-item {
   width: 100%;
   border: none;
@@ -1192,34 +1244,30 @@ watch(
   font-weight: 700;
   cursor: pointer;
 }
-
 .user-dropdown-item:hover {
   background: #f4f8ff;
   color: #154b96;
 }
-
 .user-dropdown-item.danger:hover {
   background: #fff1f2;
   color: #be123c;
 }
 
+/* ── MAIN ── */
 .main-shell {
   width: min(1320px, calc(100vw - 36px));
   margin: 0 auto;
   padding: 30px 0 42px;
 }
-
 .hero-panel,
 .content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.26fr) minmax(380px, 0.74fr);
   gap: 24px;
 }
-
 .hero-panel {
   margin-bottom: 24px;
 }
-
 .hero-copy,
 .support-card,
 .panel {
@@ -1230,14 +1278,12 @@ watch(
     inset 0 1px 0 rgba(255, 255, 255, 0.84);
   backdrop-filter: blur(8px);
 }
-
 .hero-copy {
   border-radius: 30px;
   padding: 44px;
   position: relative;
   overflow: hidden;
 }
-
 .hero-copy::after {
   content: "";
   position: absolute;
@@ -1248,7 +1294,6 @@ watch(
   border-radius: 50%;
   background: radial-gradient(circle, rgba(31, 95, 183, 0.12), transparent 68%);
 }
-
 .eyebrow,
 .section-label,
 .modal-kicker,
@@ -1266,7 +1311,6 @@ watch(
   text-transform: uppercase;
   margin-bottom: 12px;
 }
-
 .hero-copy h1,
 .panel-header h2,
 .live-chat-panel h2 {
@@ -1276,7 +1320,6 @@ watch(
   line-height: 1.05;
   letter-spacing: -0.035em;
 }
-
 .hero-copy p,
 .panel-header p,
 .live-chat-panel p {
@@ -1285,14 +1328,12 @@ watch(
   font-size: 15px;
   line-height: 1.75;
 }
-
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
 }
-
 .primary-action,
 .secondary-action,
 .submit-btn,
@@ -1309,7 +1350,6 @@ watch(
   align-items: center;
   justify-content: center;
 }
-
 .primary-action,
 .submit-btn,
 .mock-chat-send-btn,
@@ -1319,17 +1359,14 @@ watch(
   color: #fff;
   box-shadow: 0 12px 22px rgba(21, 75, 150, 0.16);
 }
-
 .primary-action.full {
   width: 100%;
 }
-
 .secondary-action {
   border: 1px solid #d8e3f0;
   background: #fff;
   color: #154b96;
 }
-
 .support-card {
   border-radius: 30px;
   padding: 28px;
@@ -1337,20 +1374,17 @@ watch(
   flex-direction: column;
   justify-content: center;
 }
-
 .support-card-head {
   display: flex;
   align-items: center;
   gap: 14px;
   margin-bottom: 18px;
 }
-
 .support-card-head img {
   width: 58px;
   height: 58px;
   object-fit: contain;
 }
-
 .support-card-head span,
 .support-reference span,
 .support-contact-grid span {
@@ -1361,26 +1395,22 @@ watch(
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-
 .support-card-head strong {
   display: block;
   color: #163d7b;
   font-size: 22px;
   margin-top: 3px;
 }
-
 .support-card-head small {
   display: block;
   color: #64748b;
   margin-top: 5px;
 }
-
 .support-contact-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-
 .support-contact-grid div,
 .support-reference {
   padding: 15px;
@@ -1388,7 +1418,6 @@ watch(
   background: #f8fbff;
   border: 1px solid #e1eaf6;
 }
-
 .support-contact-grid strong,
 .support-reference strong {
   display: block;
@@ -1397,46 +1426,38 @@ watch(
   font-size: 14px;
   word-break: break-word;
 }
-
 .support-reference {
   margin-top: 12px;
 }
-
 .left-stack,
 .right-stack {
   display: flex;
   flex-direction: column;
   gap: 22px;
 }
-
 .panel {
   border-radius: 28px;
   padding: 24px;
 }
-
 .panel-header {
   margin-bottom: 18px;
 }
-
 .compact-row {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: flex-start;
 }
-
 .directory-note {
   color: #64748b;
   font-size: 12px;
   font-weight: 800;
   padding-top: 8px;
 }
-
 .directory-list {
   display: grid;
   gap: 12px;
 }
-
 .directory-row {
   width: 100%;
   display: grid;
@@ -1450,30 +1471,25 @@ watch(
   cursor: pointer;
   transition: 0.18s ease;
 }
-
 .directory-row:hover {
   border-color: #b7cceb;
   transform: translateY(-1px);
   box-shadow: 0 14px 24px rgba(15, 23, 42, 0.06);
 }
-
 .directory-main {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .directory-main strong {
   color: #1f2937;
   font-size: 16px;
 }
-
 .directory-main span {
   color: #64748b;
   font-size: 14px;
   line-height: 1.6;
 }
-
 .directory-contact {
   display: flex;
   flex-direction: column;
@@ -1484,26 +1500,22 @@ watch(
   font-weight: 700;
   text-align: right;
 }
-
 .support-channel-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
-
 .support-channel {
   padding: 20px;
   border-radius: 22px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   border: 1px solid #dfe8f5;
 }
-
 .support-channel.featured {
   color: #fff;
   background: linear-gradient(135deg, #0d3273 0%, #154b96 55%, #1c65c0 100%);
   border-color: rgba(255, 255, 255, 0.1);
 }
-
 .channel-icon {
   width: 54px;
   height: 54px;
@@ -1515,12 +1527,10 @@ watch(
   font-size: 22px;
   margin-bottom: 14px;
 }
-
 .featured .channel-icon {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
-
 .support-channel span {
   display: block;
   color: inherit;
@@ -1531,14 +1541,12 @@ watch(
   letter-spacing: 0.08em;
   margin-bottom: 8px;
 }
-
 .support-channel h3 {
   margin: 0 0 8px;
   color: inherit;
   font-size: 18px;
   word-break: break-word;
 }
-
 .support-channel p {
   margin: 0;
   color: inherit;
@@ -1546,7 +1554,6 @@ watch(
   line-height: 1.65;
   font-size: 14px;
 }
-
 .live-chat-panel {
   background:
     radial-gradient(
@@ -1556,20 +1563,17 @@ watch(
     ),
     rgba(255, 255, 255, 0.97);
 }
-
 .live-chat-topline {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-
 .live-chat-topline small {
   color: #64748b;
   font-size: 12px;
   font-weight: 800;
 }
-
 .chat-preview {
   display: grid;
   gap: 10px;
@@ -1579,7 +1583,6 @@ watch(
   background: #f8fbff;
   border: 1px solid #e1eaf6;
 }
-
 .preview-bubble {
   max-width: 88%;
   padding: 12px 14px;
@@ -1587,42 +1590,35 @@ watch(
   font-size: 13px;
   line-height: 1.5;
 }
-
 .preview-bubble.agent {
   justify-self: start;
   background: #eef4ff;
   color: #163d7b;
 }
-
 .preview-bubble.user {
   justify-self: end;
   background: #154b96;
   color: #fff;
 }
-
 .inquiry-form {
   display: grid;
   gap: 14px;
 }
-
 .form-grid.two {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
-
 .field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .field span {
   color: #334155;
   font-size: 13px;
   font-weight: 700;
 }
-
 .field input,
 .field select,
 .field textarea,
@@ -1637,13 +1633,11 @@ watch(
   font-size: 14px;
   outline: none;
 }
-
 .field textarea {
   min-height: 132px;
   padding: 14px 16px;
   resize: vertical;
 }
-
 .field input:focus,
 .field select:focus,
 .field textarea:focus,
@@ -1651,7 +1645,6 @@ watch(
   border-color: #8fb5ef;
   box-shadow: 0 0 0 4px rgba(31, 95, 183, 0.08);
 }
-
 .submit-banner,
 .live-chat-banner {
   display: grid;
@@ -1665,12 +1658,12 @@ watch(
   font-weight: 700;
   line-height: 1.55;
 }
-
 .submit-banner strong {
   font-size: 13px;
   color: #14532d;
 }
 
+/* ── FOOTER ── */
 .footer {
   min-height: 62px;
   background: #0a3779;
@@ -1681,25 +1674,21 @@ watch(
   padding: 0 20px;
   font-size: 12px;
 }
-
 .footer-left {
   justify-self: start;
   font-weight: 600;
 }
-
 .footer-center {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 700;
 }
-
 .footer-logo {
   width: 24px;
   height: 24px;
   border-radius: 50%;
 }
-
 .footer-right {
   justify-self: end;
   font-size: 12px;
@@ -1707,6 +1696,7 @@ watch(
   opacity: 0.86;
 }
 
+/* ── MODALS ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1718,7 +1708,6 @@ watch(
   background: rgba(15, 23, 42, 0.42);
   backdrop-filter: blur(8px);
 }
-
 .live-chat-modal-card,
 .logout-modal-card,
 .settings-modal-card {
@@ -1727,14 +1716,12 @@ watch(
   border: 1px solid #dbe5f3;
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
 }
-
 .live-chat-modal-card {
   width: min(980px, 100%);
   padding: 24px;
   max-height: 92vh;
   overflow-y: auto;
 }
-
 .live-chat-modal-head,
 .settings-modal-header {
   display: flex;
@@ -1743,7 +1730,6 @@ watch(
   gap: 16px;
   margin-bottom: 18px;
 }
-
 .live-chat-modal-head h3,
 .settings-modal-header h3,
 .logout-modal-card h3 {
@@ -1751,14 +1737,12 @@ watch(
   color: #1f2937;
   font-size: 28px;
 }
-
 .live-chat-modal-head p,
 .logout-modal-card p {
   margin: 0;
   color: #64748b;
   line-height: 1.7;
 }
-
 .modal-close-btn {
   width: 40px;
   height: 40px;
@@ -1769,13 +1753,11 @@ watch(
   font-size: 22px;
   cursor: pointer;
 }
-
 .chat-modal-grid {
   display: grid;
   grid-template-columns: minmax(230px, 0.35fr) minmax(0, 0.65fr);
   gap: 18px;
 }
-
 .queue-panel {
   border: 1px solid #dfe8f5;
   border-radius: 22px;
@@ -1785,25 +1767,21 @@ watch(
   gap: 10px;
   align-content: start;
 }
-
 .queue-panel-header {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px 2px 8px;
 }
-
 .queue-panel-header strong {
   color: #1f2937;
   font-size: 15px;
 }
-
 .queue-panel-header span {
   color: #64748b;
   font-size: 12px;
   font-weight: 700;
 }
-
 .queue-card {
   border: 1px solid #e1eaf6;
   border-radius: 16px;
@@ -1812,33 +1790,28 @@ watch(
   text-align: left;
   cursor: pointer;
 }
-
 .queue-card.selected,
 .queue-card:hover {
   border-color: #9fc0ee;
   background: #f4f8ff;
 }
-
 .queue-card strong {
   display: block;
   color: #153c79;
   font-size: 14px;
   margin-bottom: 6px;
 }
-
 .queue-card span {
   color: #64748b;
   font-size: 12px;
   line-height: 1.5;
 }
-
 .chat-window {
   border: 1px solid #dfe8f5;
   border-radius: 22px;
   background: #fff;
   overflow: hidden;
 }
-
 .chat-window-header {
   display: flex;
   align-items: center;
@@ -1847,7 +1820,6 @@ watch(
   background: linear-gradient(180deg, #eef4ff 0%, #e4efff 100%);
   border-bottom: 1px solid #d7e5f8;
 }
-
 .agent-avatar {
   width: 42px;
   height: 42px;
@@ -1859,13 +1831,11 @@ watch(
   font-size: 13px;
   font-weight: 900;
 }
-
 .chat-window-header strong {
   display: block;
   color: #153c79;
   font-size: 14px;
 }
-
 .chat-window-header span {
   display: flex;
   align-items: center;
@@ -1874,14 +1844,12 @@ watch(
   font-size: 12px;
   font-weight: 700;
 }
-
 .chat-window-header i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #16a34a;
 }
-
 .mock-chat-messages {
   height: 360px;
   overflow-y: auto;
@@ -1890,7 +1858,6 @@ watch(
   gap: 10px;
   background: #fbfdff;
 }
-
 .mock-chat-bubble {
   max-width: 84%;
   padding: 11px 14px;
@@ -1899,7 +1866,6 @@ watch(
   line-height: 1.55;
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
 }
-
 .mock-chat-bubble small {
   display: block;
   margin-bottom: 4px;
@@ -1907,24 +1873,20 @@ watch(
   font-weight: 800;
   opacity: 0.64;
 }
-
 .mock-chat-bubble p {
   margin: 0;
 }
-
 .mock-chat-bubble.agent {
   justify-self: start;
   background: #eef4ff;
   color: #163d7b;
   border: 1px solid #d9e7fb;
 }
-
 .mock-chat-bubble.user {
   justify-self: end;
   background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%);
   color: #fff;
 }
-
 .typing-indicator {
   justify-self: start;
   display: inline-flex;
@@ -1935,7 +1897,6 @@ watch(
   font-weight: 700;
   padding: 8px 10px;
 }
-
 .typing-indicator span {
   width: 6px;
   height: 6px;
@@ -1943,15 +1904,12 @@ watch(
   background: #94a3b8;
   animation: pulse 1s infinite ease-in-out;
 }
-
 .typing-indicator span:nth-child(2) {
   animation-delay: 0.12s;
 }
-
 .typing-indicator span:nth-child(3) {
   animation-delay: 0.24s;
 }
-
 @keyframes pulse {
   0%,
   80%,
@@ -1964,14 +1922,12 @@ watch(
     transform: translateY(-2px);
   }
 }
-
 .quick-replies {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   padding: 12px 14px 0;
 }
-
 .quick-replies button {
   border: 1px solid #dbe5f3;
   background: #f8fbff;
@@ -1982,7 +1938,6 @@ watch(
   font-weight: 800;
   cursor: pointer;
 }
-
 .mock-chat-input-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1991,21 +1946,17 @@ watch(
   border-top: 1px solid #e4ebf5;
   background: #fff;
 }
-
 .mock-chat-send-btn {
   min-width: 100px;
 }
-
 .logout-modal-card,
 .settings-modal-card {
   width: min(460px, 100%);
   padding: 24px;
 }
-
 .logout-modal-card {
   text-align: center;
 }
-
 .logout-modal-icon {
   width: 58px;
   height: 58px;
@@ -2018,13 +1969,11 @@ watch(
   font-size: 26px;
   font-weight: 800;
 }
-
 .logout-modal-actions {
   display: flex;
   gap: 12px;
   margin-top: 22px;
 }
-
 .outline-btn,
 .danger-btn {
   flex: 1;
@@ -2034,24 +1983,20 @@ watch(
   font-weight: 800;
   cursor: pointer;
 }
-
 .outline-btn {
   border: 1px solid #d8e2ef;
   background: #ffffff;
   color: #154b96;
 }
-
 .danger-btn {
   border: none;
   background: linear-gradient(180deg, #d92d20 0%, #b42318 100%);
   color: #ffffff;
 }
-
 .settings-modal-body {
   display: grid;
   gap: 14px;
 }
-
 .settings-option-card {
   display: flex;
   align-items: center;
@@ -2062,43 +2007,36 @@ watch(
   border-radius: 18px;
   background: #fff;
 }
-
 .settings-option-card div {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .settings-option-card strong {
   color: #1f2937;
   font-size: 16px;
 }
-
 .settings-option-card span {
   color: #64748b;
   font-size: 14px;
   line-height: 1.6;
 }
-
 .settings-done-btn {
   width: 100%;
   margin-top: 18px;
 }
-
 .switch {
   position: relative;
   width: 56px;
   height: 32px;
   flex: 0 0 56px;
 }
-
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
   position: absolute;
 }
-
 .slider {
   position: absolute;
   inset: 0;
@@ -2106,7 +2044,6 @@ watch(
   background: #d7e3f5;
   cursor: pointer;
 }
-
 .slider::before {
   content: "";
   position: absolute;
@@ -2119,45 +2056,100 @@ watch(
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
   transition: 0.25s ease;
 }
-
 .switch input:checked + .slider {
   background: linear-gradient(180deg, #1f5fb7 0%, #154b96 100%);
 }
-
 .switch input:checked + .slider::before {
   transform: translateX(24px);
 }
 
+/* ── RESPONSIVE ── */
 @media (max-width: 1100px) {
   .hero-panel,
   .content-grid,
   .chat-modal-grid {
     grid-template-columns: 1fr;
   }
-
   .support-channel-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .topbar {
     height: auto;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 18px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+  }
+  .brand-text {
+    font-size: 15px;
+  }
+  .brand-kicker {
+    font-size: 9px;
+  }
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
   }
 
   .topbar-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+  }
+  .topbar-nav.mobile-open {
+    max-height: 320px;
+  }
+  .nav-item {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-item.active::after {
+    display: none;
+  }
+
+  .user-menu {
+    order: 3;
+  }
+  .user-id {
+    display: none;
+  }
+  .user-name {
+    font-size: 11px;
+  }
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    flex: 0 0 26px;
+  }
+  .user-caret {
+    display: none;
   }
 
   .main-shell {
     width: min(100%, calc(100vw - 18px));
     padding: 16px 0 26px;
   }
-
   .hero-copy,
   .support-card,
   .panel,
@@ -2165,21 +2157,17 @@ watch(
     padding: 18px;
     border-radius: 22px;
   }
-
   .support-contact-grid,
   .form-grid.two {
     grid-template-columns: 1fr;
   }
-
   .directory-row {
     grid-template-columns: 1fr;
   }
-
   .directory-contact {
     align-items: flex-start;
     text-align: left;
   }
-
   .footer {
     grid-template-columns: 1fr;
     height: auto;
@@ -2187,19 +2175,16 @@ watch(
     padding: 12px;
     text-align: center;
   }
-
   .footer-left,
   .footer-center,
   .footer-right {
     justify-self: center;
   }
-
   .mock-chat-input-row,
   .logout-modal-actions {
     grid-template-columns: 1fr;
     flex-direction: column;
   }
-
   .mock-chat-send-btn,
   .outline-btn,
   .danger-btn {

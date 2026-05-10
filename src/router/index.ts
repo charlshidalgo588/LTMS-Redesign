@@ -68,6 +68,8 @@ const routes = [
     name: "Contact",
     component: ContactPage,
   },
+
+  // IMPORTANT: keep this LAST
   {
     path: "/:pathMatch(.*)*",
     redirect: "/",
@@ -75,7 +77,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHashHistory("/LTMS-Redesign/"),
   routes,
 });
 

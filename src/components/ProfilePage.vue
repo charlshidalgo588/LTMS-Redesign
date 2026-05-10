@@ -23,15 +23,56 @@
         </button>
       </div>
 
-      <nav class="topbar-nav">
-        <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
+      <!-- Mobile hamburger -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click="showMobileNav = !showMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="topbar-nav" :class="{ 'mobile-open': showMobileNav }">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            openOfficialWebsite();
+            showMobileNav = false;
+          "
+        >
           LTO OFFICIAL WEBPAGE
         </a>
-        <a href="#" class="nav-item" @click.prevent="goToELearning">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToELearning();
+            showMobileNav = false;
+          "
+        >
           E-LEARNING
         </a>
-        <a href="#" class="nav-item" @click.prevent="goToContact">CONTACT</a>
-        <a href="#" class="nav-item" @click.prevent="goToDashboard">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToContact();
+            showMobileNav = false;
+          "
+        >
+          CONTACT
+        </a>
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToDashboard();
+            showMobileNav = false;
+          "
+        >
           DASHBOARD
         </a>
       </nav>
@@ -1161,6 +1202,7 @@ const router = useRouter();
 
 const isPageLoading = ref(false);
 const showUserMenu = ref(false);
+const showMobileNav = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
 const isSaving = ref(false);
 const saveMessage = ref("");
@@ -1234,23 +1276,18 @@ const fieldToTabMap: Record<string, TabName> = {
   clientId: "Identity",
   firstName: "Identity",
   lastName: "Identity",
-
   email: "Contact",
   mobile: "Contact",
-
   country: "General",
   civilStatus: "General",
   birthDate: "General",
   currentCity: "General",
   birthplace: "General",
-
   height: "Medical",
   weight: "Medical",
-
   emergencyName: "People",
   emergencyNumber: "People",
   emergencyAddress: "People",
-
   houseNo: "Address",
   street: "Address",
   barangay: "Address",
@@ -1428,95 +1465,74 @@ const validateForm = () => {
   if (isBlank(form.licenseNumber)) {
     errors.licenseNumber = "License number is required.";
   }
-
   if (isBlank(form.clientId)) {
     errors.clientId = "Client ID is required.";
   } else if (!isDigitsOnly(form.clientId)) {
     errors.clientId = "Client ID must contain digits only.";
   }
-
   if (isBlank(form.firstName)) {
     errors.firstName = "First name is required.";
   }
-
   if (isBlank(form.lastName)) {
     errors.lastName = "Last name is required.";
   }
-
   if (isBlank(form.email)) {
     errors.email = "Email address is required.";
   } else if (!isEmail(form.email)) {
     errors.email = "Enter a valid email address.";
   }
-
   if (isBlank(form.mobile)) {
     errors.mobile = "Mobile number is required.";
   } else if (!isMobile(form.mobile)) {
     errors.mobile = "Enter a valid Philippine mobile number.";
   }
-
   if (isBlank(form.country)) {
     errors.country = "Country is required.";
   }
-
   if (isBlank(form.civilStatus)) {
     errors.civilStatus = "Civil status is required.";
   }
-
   if (isBlank(form.birthDate)) {
     errors.birthDate = "Birth date is required.";
   }
-
   if (isBlank(form.currentCity)) {
     errors.currentCity = "Current city is required.";
   }
-
   if (isBlank(form.birthplace)) {
     errors.birthplace = "Birthplace is required.";
   }
-
   if (form.height && !isDecimal(form.height)) {
     errors.height = "Height must be a valid number.";
   }
-
   if (form.weight && !isDecimal(form.weight)) {
     errors.weight = "Weight must be a valid number.";
   }
-
   if (isBlank(form.emergencyName)) {
     errors.emergencyName = "Emergency contact name is required.";
   }
-
   if (isBlank(form.emergencyNumber)) {
     errors.emergencyNumber = "Emergency contact number is required.";
   } else if (!isMobile(form.emergencyNumber)) {
     errors.emergencyNumber = "Enter a valid Philippine mobile number.";
   }
-
   if (isBlank(form.emergencyAddress)) {
     errors.emergencyAddress = "Emergency contact address is required.";
   }
-
   if (isBlank(form.houseNo)) {
     errors.houseNo = "House / Bldg / Lot is required.";
   }
-
   if (isBlank(form.street)) {
     errors.street = "Street / Subdivision is required.";
   }
-
   if (isBlank(form.barangay)) {
     errors.barangay = "Barangay is required.";
   }
-
   if (isBlank(form.cityMunicipality)) {
     errors.cityMunicipality = "City / Municipality is required.";
   }
-
   if (isBlank(form.province)) {
     errors.province = "Province is required.";
   }
-
   if (isBlank(form.zipCode)) {
     errors.zipCode = "ZIP code is required.";
   } else if (!/^\d{4}$/.test(form.zipCode)) {
@@ -1551,6 +1567,7 @@ const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
   isPageLoading.value = true;
   showUserMenu.value = false;
+  showMobileNav.value = false;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   await nextTick();
   await delay(220);
@@ -1577,6 +1594,8 @@ const handleDocumentClick = (event: MouseEvent) => {
 };
 
 const goToDashboard = async () => {
+  closeUserMenu();
+  showMobileNav.value = false;
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
@@ -1593,6 +1612,8 @@ const goToDashboard = async () => {
 };
 
 const goToELearning = async () => {
+  closeUserMenu();
+  showMobileNav.value = false;
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
@@ -1610,6 +1631,7 @@ const goToELearning = async () => {
 
 const goToProfile = async () => {
   closeUserMenu();
+  showMobileNav.value = false;
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
@@ -1635,16 +1657,15 @@ const goToSettings = async () => {
 
 const goToContact = async () => {
   closeUserMenu();
+  showMobileNav.value = false;
   const currentPath = router.currentRoute.value.path;
   const started = await beginPageLoading();
   if (!started) return;
-
   if (currentPath === "/contact") {
     await delay(280);
     endPageLoading();
     return;
   }
-
   try {
     await router.push("/contact");
   } catch {
@@ -1745,6 +1766,30 @@ watch(
   box-sizing: border-box;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE NAV HAMBURGER
+═══════════════════════════════════════════════════════════════ */
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  order: 3;
+  flex-shrink: 0;
+}
+.mobile-nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: 0.2s ease;
+}
+
 :global(html, body, #app) {
   margin: 0;
   min-height: 100%;
@@ -1811,6 +1856,9 @@ input {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════════ */
 .topbar {
   min-height: 74px;
   background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
@@ -1823,6 +1871,7 @@ input {
   position: sticky;
   top: 0;
   z-index: 100;
+  gap: 12px;
 }
 
 .topbar-left {
@@ -1904,6 +1953,7 @@ input {
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .user-menu-trigger {
@@ -1997,6 +2047,91 @@ input {
 .user-dropdown-item.danger:hover {
   background: #fff1f2;
   color: #be123c;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE TOPBAR BREAKPOINT — mirrors Dashboard mobile-view pattern
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 10px;
+    position: sticky;
+  }
+
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .brand-text {
+    font-size: 15px;
+  }
+
+  .brand-kicker {
+    font-size: 9px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Show hamburger on mobile */
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
+  }
+
+  /* Nav collapses vertically behind hamburger */
+  .topbar-nav {
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+  }
+
+  .topbar-nav.mobile-open {
+    max-height: 260px;
+  }
+
+  .nav-item {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .user-menu {
+    order: 3;
+    flex-shrink: 0;
+  }
+
+  .user-id {
+    display: none;
+  }
+
+  .user-name {
+    font-size: 11px;
+  }
+
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    flex: 0 0 26px;
+  }
+
+  .user-caret {
+    display: none;
+  }
 }
 
 .main-shell {
@@ -2538,7 +2673,9 @@ input {
 .form-section {
   border: 1px solid #e2e9f3;
   background: linear-gradient(180deg, #fcfdff 0%, #f9fbfe 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 12px 24px rgba(15, 23, 42, 0.045);
   border-radius: 20px;
   padding: 20px;
 }
@@ -2592,6 +2729,7 @@ input {
   border-radius: 18px;
   padding: 16px;
   margin-top: 14px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.035);
 }
 
 .sub-card:first-of-type {
@@ -3011,16 +3149,9 @@ input {
   letter-spacing: 0.05em;
 }
 
-.form-section {
-  box-shadow:
-    0 12px 24px rgba(15, 23, 42, 0.045),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
-.sub-card {
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.035);
-}
-
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1240px) {
   .profile-card-deck {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3042,19 +3173,7 @@ input {
 
 @media (max-width: 900px) {
   .profile-card-deck {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar {
-    min-height: auto;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 18px;
-  }
-
-  .topbar-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-grid,
@@ -3088,6 +3207,10 @@ input {
   .main-shell {
     width: min(100%, calc(100vw - 20px));
     padding-bottom: 150px;
+  }
+
+  .profile-card-deck {
+    grid-template-columns: 1fr;
   }
 
   .panel-card,

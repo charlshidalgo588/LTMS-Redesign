@@ -23,19 +23,56 @@
         </button>
       </div>
 
-      <nav class="topbar-nav">
-        <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
+      <!-- Mobile hamburger -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click="showMobileNav = !showMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="topbar-nav" :class="{ 'mobile-open': showMobileNav }">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            openOfficialWebsite();
+            showMobileNav = false;
+          "
+        >
           LTO OFFICIAL WEBPAGE
         </a>
         <a
           href="#"
           class="nav-item active elearning-active"
-          @click.prevent="goToELearning"
+          @click.prevent="
+            goToELearning();
+            showMobileNav = false;
+          "
         >
           E-LEARNING
         </a>
-        <a href="#" class="nav-item" @click.prevent="goToContact">CONTACT</a>
-        <a href="#" class="nav-item" @click.prevent="goToDashboard">
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToContact();
+            showMobileNav = false;
+          "
+        >
+          CONTACT
+        </a>
+        <a
+          href="#"
+          class="nav-item"
+          @click.prevent="
+            goToDashboard();
+            showMobileNav = false;
+          "
+        >
           DASHBOARD
         </a>
       </nav>
@@ -615,7 +652,6 @@
                 >s</span
               >
               found
-              <!-- ✅ Show active filter state so user always knows what's applied -->
               <span v-if="activeFilterLabel" class="catalog-filter-label">
                 — {{ activeFilterLabel }}
               </span>
@@ -623,7 +659,6 @@
           </div>
 
           <div class="catalog-tools">
-            <!-- ✅ Category dropdown is now always in sync with the actual filter state -->
             <select
               v-model="selectedCategory"
               class="category-select"
@@ -639,7 +674,6 @@
               </option>
             </select>
 
-            <!-- ✅ Clear all filters button — only shown when a filter is active -->
             <button
               v-if="hasActiveFilter"
               type="button"
@@ -895,15 +929,10 @@ type ModuleItem = {
   images: string[];
 };
 
-// ─── Quick tag type ───────────────────────────────────────────────────────────
-// Each tag now carries both a display label AND an explicit filter mode:
-//   mode: "category" → set selectedCategory + clear searchQuery
-//   mode: "search"   → set searchQuery + reset selectedCategory to ALL
-// This keeps the dropdown and the search box always in sync.
 type QuickTag = {
   label: string;
   mode: "category" | "search";
-  value: string; // category name OR search term
+  value: string;
 };
 
 const COMPLETED_KEY = "ltms_completed_lessons";
@@ -919,6 +948,7 @@ const courseOverviewRef = ref<HTMLElement | null>(null);
 const learningCatalogRef = ref<HTMLElement | null>(null);
 const isPageLoading = ref(false);
 const showUserMenu = ref(false);
+const showMobileNav = ref(false);
 const showLogoutModal = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
 
@@ -985,6 +1015,7 @@ const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
   isPageLoading.value = true;
   showUserMenu.value = false;
+  showMobileNav.value = false;
   showLogoutModal.value = false;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   await nextTick();
@@ -1016,6 +1047,7 @@ const handleDocumentClick = (event: MouseEvent) => {
 
 const requestLogout = () => {
   closeUserMenu();
+  showMobileNav.value = false;
   showLogoutModal.value = true;
 };
 
@@ -1109,15 +1141,6 @@ const focusSearchResults = async () => {
   await focusLearningCatalog();
 };
 
-// ─── FIXED: applyQuickTag ─────────────────────────────────────────────────────
-// Previously, tags like "Registration" and "Renewal" had no matching category,
-// so selectedCategory stayed "ALL" while searchQuery was set — the dropdown
-// showed "All Categories" even though a keyword filter was active.
-//
-// Now each QuickTag declares its own mode:
-//   "category" tags → set selectedCategory, clear searchQuery (dropdown reflects it)
-//   "search"   tags → set searchQuery, reset selectedCategory to ALL (search reflects it)
-// Either way the two controls are always consistent with each other.
 const applyQuickTag = async (tag: QuickTag) => {
   if (tag.mode === "category") {
     selectedCategory.value = tag.value;
@@ -1129,19 +1152,13 @@ const applyQuickTag = async (tag: QuickTag) => {
   await focusLearningCatalog();
 };
 
-// ─── FIXED: onCategoryChange ──────────────────────────────────────────────────
-// When the user picks a category from the dropdown we clear the search query
-// so the two filters don't silently compound (old behaviour: picking "Law"
-// while "renewal" was in the search box would give a confusing double-filter).
 const onCategoryChange = async () => {
   searchQuery.value = "";
   await focusLearningCatalog();
 };
 
-// ─── Clear helpers ────────────────────────────────────────────────────────────
 const clearSearch = () => {
   searchQuery.value = "";
-  // Do NOT reset the category — user may have set it via dropdown intentionally.
 };
 
 const clearAllFilters = async () => {
@@ -1150,7 +1167,6 @@ const clearAllFilters = async () => {
   await focusLearningCatalog();
 };
 
-// ─── Derived filter state ─────────────────────────────────────────────────────
 const hasActiveFilter = computed(
   () => searchQuery.value.trim() !== "" || selectedCategory.value !== "ALL",
 );
@@ -1162,7 +1178,6 @@ const activeFilterLabel = computed(() => {
   return parts.join(", ");
 });
 
-// ─── isActiveTag helper for quick tag highlight ───────────────────────────────
 const isActiveTag = (tag: QuickTag): boolean => {
   if (tag.mode === "category") return selectedCategory.value === tag.value;
   return searchQuery.value.trim().toLowerCase() === tag.value.toLowerCase();
@@ -2166,10 +2181,6 @@ const modules = ref<ModuleItem[]>([
   },
 ]);
 
-// ─── FIXED: quickTags now use the QuickTag type ───────────────────────────────
-// "Licensing" and "Road Safety" and "Law" are real category names → mode: "category"
-// "Registration" and "Renewal" are keyword searches, not categories → mode: "search"
-// This ensures the dropdown and search box are always consistent.
 const quickTags: QuickTag[] = [
   { label: "Licensing", mode: "category", value: "Licensing" },
   { label: "Road Safety", mode: "category", value: "Road Safety" },
@@ -2252,14 +2263,6 @@ const officialLearningHighlights = computed(() => [
   },
 ]);
 
-// ─── FIXED: filteredModules ───────────────────────────────────────────────────
-// Previously both searchQuery and selectedCategory could be active at the same
-// time (e.g. picking "Renewal" tag set searchQuery="Renewal" but left
-// selectedCategory="ALL", while manually picking "Licensing" from dropdown left
-// whatever searchQuery was still set). Now the two controls are always mutually
-// reset by applyQuickTag / onCategoryChange / clearSearch, so they never
-// silently compound. The computed below is unchanged — it already handles both
-// filters independently; the fix was upstream in how they're set.
 const filteredModules = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
@@ -2294,6 +2297,30 @@ const filteredModules = computed(() => {
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE NAV HAMBURGER
+═══════════════════════════════════════════════════════════════ */
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  order: 3;
+  flex-shrink: 0;
+}
+.mobile-nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: 0.2s ease;
 }
 
 .page-loading-overlay {
@@ -2361,6 +2388,9 @@ const filteredModules = computed(() => {
     url("../assets/BGC.jpg") center/cover no-repeat;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════════ */
 .topbar {
   min-height: 72px;
   background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
@@ -2370,6 +2400,7 @@ const filteredModules = computed(() => {
   justify-content: space-between;
   padding: 0 28px;
   box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
+  gap: 12px;
 }
 
 .topbar-left {
@@ -2443,7 +2474,13 @@ const filteredModules = computed(() => {
     transform 0.2s ease;
 }
 
-.nav-item:hover,
+.nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
 .nav-item.active {
   color: #ffffff;
   background: linear-gradient(
@@ -2457,10 +2494,23 @@ const filteredModules = computed(() => {
     0 10px 22px rgba(4, 20, 52, 0.22);
 }
 
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffffff 0%, #cfe0ff 100%);
+  opacity: 0.95;
+}
+
 .user-menu {
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .user-menu-trigger {
@@ -2555,31 +2605,93 @@ const filteredModules = computed(() => {
   color: #be123c;
 }
 
-.nav-item:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.14);
-  transform: translateY(-1px);
-}
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE TOPBAR BREAKPOINT — mirrors Dashboard mobile-view pattern
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 10px;
+    position: relative;
+  }
 
-.nav-item.active::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 6px;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ffffff 0%, #cfe0ff 100%);
-  opacity: 0.95;
-}
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+  }
 
-.nav-item.dashboard-active {
-  padding-inline: 16px;
-}
+  .brand-text {
+    font-size: 15px;
+  }
 
-.nav-item.elearning-active {
-  padding-inline: 16px;
+  .brand-kicker {
+    font-size: 9px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Show hamburger on mobile */
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
+  }
+
+  /* Nav collapses vertically behind hamburger */
+  .topbar-nav {
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+  }
+
+  .topbar-nav.mobile-open {
+    max-height: 260px;
+  }
+
+  .nav-item {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-item.active::after {
+    display: none;
+  }
+
+  .user-menu {
+    order: 3;
+    flex-shrink: 0;
+  }
+
+  .user-id {
+    display: none;
+  }
+
+  .user-name {
+    font-size: 11px;
+  }
+
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    flex: 0 0 26px;
+  }
+
+  .user-caret {
+    display: none;
+  }
 }
 
 .main-content {
@@ -2731,7 +2843,6 @@ const filteredModules = computed(() => {
     box-shadow 0.18s ease;
 }
 
-/* ✅ Active quick tag gets a solid highlight so the user knows it's selected */
 .tag-btn.active {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.55);
@@ -2914,7 +3025,6 @@ const filteredModules = computed(() => {
   font-size: 14px;
 }
 
-/* ✅ Inline filter label shown next to the course count */
 .catalog-filter-label {
   color: #1f4fb8;
   font-weight: 800;
@@ -3082,7 +3192,6 @@ const filteredModules = computed(() => {
   color: #334155;
 }
 
-/* ✅ Clear filters button */
 .clear-filter-btn {
   min-height: 44px;
   padding: 0 16px;
@@ -3523,6 +3632,7 @@ const filteredModules = computed(() => {
 .study-guide-list li + li {
   margin-top: 6px;
 }
+
 .topic-video-frame {
   position: relative;
   height: 100%;
@@ -3610,23 +3720,6 @@ const filteredModules = computed(() => {
   font-size: 12px;
   font-weight: 800;
   margin-bottom: 10px;
-}
-
-.topic-photos-header {
-  margin-top: 8px;
-}
-
-.topic-photo-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.topic-photo {
-  height: 120px;
-  border-radius: 14px;
-  background-size: cover;
-  background-position: center;
 }
 
 .highlight-grid {
@@ -3954,6 +4047,9 @@ const filteredModules = computed(() => {
   transform: translateY(-1px);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1400px) {
   .featured-grid,
   .recent-course-grid,
@@ -4002,18 +4098,6 @@ const filteredModules = computed(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .topbar {
-    height: auto;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 18px;
-  }
-
-  .topbar-nav {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
   .featured-grid,
   .recent-course-grid,
   .video-grid,
@@ -4060,19 +4144,6 @@ const filteredModules = computed(() => {
     width: 100%;
   }
 
-  .brand-text {
-    font-size: 18px;
-  }
-
-  .user-menu-trigger {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .user-id {
-    font-size: 10px;
-  }
-
   .hero h1 {
     font-size: 32px;
   }
@@ -4097,10 +4168,6 @@ const filteredModules = computed(() => {
 
   .lesson-module-card {
     grid-template-columns: 1fr;
-  }
-
-  .topic-photo-grid {
-    grid-template-columns: 1fr 1fr;
   }
 
   .logout-modal-card {

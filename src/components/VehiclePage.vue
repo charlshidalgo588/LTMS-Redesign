@@ -23,22 +23,36 @@
         </button>
       </div>
 
-      <nav class="topbar-nav">
+      <!-- Mobile hamburger copied from Home topbar -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click.stop="toggleMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav
+        class="topbar-nav"
+        :class="{ 'mobile-open': showMobileNav }"
+        aria-label="Primary navigation"
+      >
         <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
           LTO OFFICIAL WEBPAGE
         </a>
-
         <a href="#" class="nav-item" @click.prevent="goToELearning">
           E-LEARNING
         </a>
-
-        <a href="#" class="nav-item" @click.prevent="goToContact"> CONTACT </a>
+        <a href="#" class="nav-item" @click.prevent="goToContact">CONTACT</a>
 
         <div ref="dashboardMenuRef" class="dashboard-menu">
           <button
             type="button"
-            class="nav-item dashboard-active dashboard-trigger active"
-            @click="toggleDashboardMenu"
+            class="nav-item dashboard-active dashboard-trigger"
+            :class="{ active: isDashboardSectionActive }"
+            @click.stop="toggleDashboardMenu"
           >
             DASHBOARD
             <svg class="dashboard-caret" viewBox="0 0 24 24" aria-hidden="true">
@@ -65,22 +79,18 @@
                 @click="goToDashboardItem(item.route)"
               >
                 <span class="mega-icon" v-html="item.icon"></span>
-
                 <span class="mega-copy">
                   <strong>{{ item.title }}</strong>
                   <small v-html="item.description"></small>
                 </span>
-
                 <span class="mega-arrow" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
+                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
                 </span>
               </button>
             </div>
 
             <div class="mega-footer">
-              <span>Active module: VEHICLE</span>
+              <span>Active module: {{ currentSectionLabel }}</span>
               <button type="button" @click="goToDashboard">
                 Return to main dashboard
               </button>
@@ -90,7 +100,11 @@
       </nav>
 
       <div ref="userMenuRef" class="user-menu">
-        <button class="user-menu-trigger" type="button" @click="toggleUserMenu">
+        <button
+          class="user-menu-trigger"
+          type="button"
+          @click.stop="toggleUserMenu"
+        >
           <div class="user-avatar">H</div>
           <div class="user-info">
             <span class="user-name">HIDALGO</span>
@@ -112,7 +126,6 @@
           <button type="button" class="user-dropdown-item" @click="goToProfile">
             Profile
           </button>
-
           <button
             type="button"
             class="user-dropdown-item"
@@ -120,7 +133,6 @@
           >
             Settings
           </button>
-
           <button
             type="button"
             class="user-dropdown-item danger"
@@ -879,6 +891,7 @@ const selectedApplicationType = ref("renewal");
 const validationMessage = ref("");
 const isConfirmed = ref(false);
 const isPageLoading = ref(false);
+const showMobileNav = ref(false);
 const showUserMenu = ref(false);
 const showDashboardMenu = ref(false);
 const showVehiclePicker = ref(false);
@@ -972,75 +985,37 @@ const dashboardMenuItems = [
     title: "DASHBOARD",
     route: "/home",
     description: "Return to main dashboard<br>overview and services",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M3 11l9-7 9 7" />
-        <path d="M5.5 10.5v9h13v-9" />
-        <path d="M9.5 19.5v-6h5v6" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7" /><path d="M5.5 10.5v9h13v-9" /><path d="M9.5 19.5v-6h5v6" /></svg>`,
   },
   {
     title: "LICENSING",
     route: "/licensing",
     description: "Apply, renew, manage<br>driver & student licenses",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <rect x="3.75" y="5.5" width="16.5" height="13" rx="2.4" />
-        <path d="M7.5 10h5.5" />
-        <path d="M7.5 13h3.7" />
-        <circle cx="16" cy="12" r="2.15" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><rect x="3.75" y="5.5" width="16.5" height="13" rx="2.4" /><path d="M7.5 10h5.5" /><path d="M7.5 13h3.7" /><circle cx="16" cy="12" r="2.15" /></svg>`,
   },
   {
     title: "VEHICLE",
     route: "/vehicle",
     description: "Check registrations<br>and manage vehicle records",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18" />
-        <path d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18" /><path d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z" /><circle cx="7.5" cy="15.8" r="1" fill="currentColor" stroke="none" /><circle cx="16.5" cy="15.8" r="1" fill="currentColor" stroke="none" /></svg>`,
   },
   {
     title: "TRANSACTIONS",
     route: "/transactions",
     description: "Track application<br>status and payment history",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z" />
-        <path d="M8.5 8h7" />
-        <path d="M8.5 11.5h7" />
-        <path d="M8.5 15h4.5" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z" /><path d="M8.5 8h7" /><path d="M8.5 11.5h7" /><path d="M8.5 15h4.5" /></svg>`,
   },
   {
     title: "VIOLATIONS",
     route: "/violations",
     description: "View and settle<br>traffic violations",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z" />
-        <path d="M12 8.5v5" />
-        <path d="M12 17h.01" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z" /><path d="M12 8.5v5" /><path d="M12 17h.01" /></svg>`,
   },
   {
     title: "DOCUMENTS",
     route: "/documents",
     description: "Request official copies<br>and electronic records",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z" />
-        <path d="M14.5 4.25v4h4" />
-        <path d="M8.5 12h7" />
-        <path d="M8.5 15.5h5" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z" /><path d="M14.5 4.25v4h4" /><path d="M8.5 12h7" /><path d="M8.5 15.5h5" /></svg>`,
   },
 ];
 
@@ -1114,8 +1089,28 @@ const navigateTo = async (route: string) => {
   }
 };
 
-const isRouteActive = (route: string) =>
-  router.currentRoute.value.path === route;
+const currentRoutePath = computed(() => router.currentRoute.value.path);
+const isRouteActive = (route: string) => currentRoutePath.value === route;
+const isDashboardSectionActive = computed(() =>
+  [
+    "/home",
+    "/licensing",
+    "/vehicle",
+    "/transactions",
+    "/violations",
+    "/documents",
+  ].includes(currentRoutePath.value),
+);
+const currentSectionLabel = computed(() => {
+  const item = dashboardMenuItems.find(
+    (menuItem) => menuItem.route === currentRoutePath.value,
+  );
+  return item?.title || "DASHBOARD";
+});
+const breadcrumbItems = computed(() => [
+  { label: "Dashboard", route: "/home" },
+  { label: currentSectionLabel.value, route: currentRoutePath.value },
+]);
 
 const goToDashboard = () => navigateTo("/home");
 const goToELearning = () => navigateTo("/e-learning");
@@ -1215,6 +1210,13 @@ const confirmSubmit = () => {
   showSuccessModal.value = true;
 };
 
+const toggleMobileNav = () => {
+  if (isPageLoading.value) return;
+  showMobileNav.value = !showMobileNav.value;
+  showUserMenu.value = false;
+  showDashboardMenu.value = false;
+};
+
 const toggleDashboardMenu = () => {
   if (isPageLoading.value) return;
   showDashboardMenu.value = !showDashboardMenu.value;
@@ -1228,6 +1230,7 @@ const toggleUserMenu = () => {
 };
 
 const closeFloatingMenus = () => {
+  showMobileNav.value = false;
   showUserMenu.value = false;
   showDashboardMenu.value = false;
 };
@@ -1431,6 +1434,29 @@ watch(
   display: flex;
   align-items: center;
   gap: 22px;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle span {
+  display: block;
+  width: 21px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .nav-item {
@@ -3238,5 +3264,633 @@ watch(
 .application-radio svg {
   width: 14px !important;
   height: 14px !important;
+}
+
+/* Licensing mobile topbar/submenu consistency override */
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto;
+    min-height: 64px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+    position: relative;
+    z-index: 80;
+  }
+
+  .topbar-left {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .user-id {
+    display: none;
+  }
+
+  .topbar-nav {
+    order: 4;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(5, 36, 82, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: visible;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .dashboard-menu {
+    width: 100%;
+  }
+
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+    border-radius: 18px;
+    transform: none;
+    z-index: 1001;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .modal-hero,
+  .form-header,
+  .dynamic-header,
+  .dynamic-grid,
+  .review-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .step-card,
+  .fee-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+    transform: none;
+    border-radius: 18px;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .mega-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    justify-content: center;
+  }
+
+  .user-dropdown {
+    right: 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .seal-watermark {
+    width: 220px;
+    left: 10px;
+    top: 70px;
+  }
+
+  .licensing-modal {
+    width: min(96%, 760px);
+    padding: 0 18px 18px;
+    border-radius: 18px;
+  }
+
+  .modal-top-strip {
+    margin: 0 -18px;
+  }
+
+  .progress-track,
+  .review-summary,
+  .success-summary,
+  .application-type-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid label {
+    text-align: left;
+  }
+
+  .modal-actions,
+  .confirm-actions,
+  .logout-modal-actions,
+  .settings-modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-back,
+  .btn-cancel,
+  .btn-proceed {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .upload-option,
+  .confirmation-box {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .upload-cta {
+    width: 100%;
+    max-width: none;
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-text {
+    font-size: 16px;
+  }
+
+  .brand-kicker {
+    font-size: 9px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .user-name {
+    font-size: 11px;
+  }
+
+  .selection-indicator,
+  .option-chevron,
+  .mega-arrow {
+    display: none;
+  }
+
+  .footer {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    justify-self: center;
+  }
+
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    transform: none;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .user-dropdown {
+    position: static;
+    margin-top: 8px;
+  }
+
+  .mega-item {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .settings-option-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .switch {
+    align-self: flex-end;
+  }
+}
+</style>
+
+<!--
+  MOBILE TOPBAR CONSISTENCY PATCH
+  This final scoped block intentionally comes last so it overrides the older
+  licensing-only mobile header rules above. It matches the Home page mobile
+  topbar spacing and keeps the Dashboard submenu fully visible.
+-->
+<style scoped>
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto !important;
+    min-height: 64px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  .topbar-left {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .brand-kicker {
+    font-size: 9px !important;
+    line-height: 1.05 !important;
+  }
+
+  .brand-text {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .user-menu {
+    order: 3 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .user-menu-trigger {
+    width: auto !important;
+    min-height: 42px !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 11px !important;
+  }
+
+  .user-id {
+    display: none !important;
+  }
+
+  .user-name {
+    display: inline !important;
+    font-size: 11px !important;
+  }
+
+  .user-caret {
+    display: none !important;
+  }
+
+  .topbar-nav {
+    order: 4 !important;
+    width: 100% !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: space-between !important;
+    padding: 11px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .nav-item.active,
+  .dashboard-trigger.active,
+  .nav-item:hover,
+  .dashboard-trigger:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  .dashboard-active::after {
+    display: none !important;
+  }
+
+  .dashboard-menu {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .dashboard-caret {
+    width: 14px !important;
+    height: 14px !important;
+    flex: 0 0 14px !important;
+  }
+
+  .dashboard-caret path {
+    fill: currentColor !important;
+  }
+
+  .mega-dropdown {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: linear-gradient(180deg, #062f68 0%, #052452 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: none !important;
+    z-index: 1001 !important;
+  }
+
+  .mega-dropdown::before {
+    display: none !important;
+  }
+
+  .mega-dropdown-head {
+    display: block !important;
+    padding: 0 0 12px !important;
+    margin: 0 0 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .mega-kicker {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #93c5fd !important;
+  }
+
+  .mega-dropdown-head h3,
+  .mega-dropdown-head p {
+    display: none !important;
+  }
+
+  .mega-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mega-item {
+    display: grid !important;
+    grid-template-columns: 46px 1fr 22px !important;
+    align-items: center !important;
+    min-height: 74px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .mega-item:hover,
+  .mega-item.active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(147, 197, 253, 0.4) !important;
+  }
+
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    padding: 11px !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  .mega-copy strong {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .mega-copy small {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  .mega-arrow {
+    display: grid !important;
+    width: 22px !important;
+    height: 22px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+  }
+
+  .mega-arrow svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mega-arrow svg path {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.4 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .mega-footer {
+    margin-top: 10px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .mega-footer span {
+    display: none !important;
+  }
+
+  .mega-footer button {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    color: #0d468f !important;
+    font-weight: 900 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-wrap {
+    gap: 10px !important;
+  }
+
+  .user-menu-trigger {
+    gap: 8px !important;
+  }
+
+  .topbar {
+    padding-inline: 14px !important;
+  }
+}
+</style>
+
+<!--
+  ICON CONSISTENCY PATCH
+  These rules force the Vehicle mobile Dashboard submenu icons to render with
+  the same size, stroke, color, and alignment as the Licensing page submenu.
+-->
+<style scoped>
+@media (max-width: 1000px) {
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    padding: 11px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: none !important;
+  }
+
+  .mega-item:first-child .mega-icon {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  :deep(.mega-icon svg) {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    display: block !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.85 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    transform: none !important;
+  }
+
+  :deep(.mega-icon svg circle[fill="currentColor"]),
+  :deep(.mega-icon svg path[fill="currentColor"]) {
+    fill: currentColor !important;
+    stroke: none !important;
+  }
 }
 </style>

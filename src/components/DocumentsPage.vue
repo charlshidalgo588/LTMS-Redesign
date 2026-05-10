@@ -23,7 +23,22 @@
         </button>
       </div>
 
-      <nav class="topbar-nav" aria-label="Primary navigation">
+      <!-- Mobile hamburger copied from Transactions topbar -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click.stop="toggleMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav
+        class="topbar-nav"
+        :class="{ 'mobile-open': showMobileNav }"
+        aria-label="Primary navigation"
+      >
         <a href="#" class="nav-item" @click.prevent="openOfficialWebsite"
           >LTO OFFICIAL WEBPAGE</a
         >
@@ -37,7 +52,7 @@
             type="button"
             class="nav-item dashboard-active dashboard-trigger"
             :class="{ active: isDashboardSectionActive }"
-            @click="toggleDashboardMenu"
+            @click.stop="toggleDashboardMenu"
           >
             DASHBOARD
             <svg class="dashboard-caret" viewBox="0 0 24 24">
@@ -85,7 +100,11 @@
       </nav>
 
       <div ref="userMenuRef" class="user-menu">
-        <button class="user-menu-trigger" type="button" @click="toggleUserMenu">
+        <button
+          class="user-menu-trigger"
+          type="button"
+          @click.stop="toggleUserMenu"
+        >
           <div class="user-avatar">H</div>
           <div class="user-info">
             <span class="user-name">HIDALGO</span>
@@ -559,6 +578,7 @@ const router = useRouter();
 const { settings: accessibilitySettings } = useAccessibility();
 
 const isPageLoading = ref(false);
+const showMobileNav = ref(false);
 const showUserMenu = ref(false);
 const showDashboardMenu = ref(false);
 const showLogoutModal = ref(false);
@@ -902,6 +922,7 @@ const delay = (ms: number) =>
 const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
   isPageLoading.value = true;
+  showMobileNav.value = false;
   showUserMenu.value = false;
   showDashboardMenu.value = false;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -940,6 +961,11 @@ const openOfficialWebsite = async () => {
   endPageLoading();
 };
 const goToDashboardItem = (route: string) => navigateTo(route);
+const toggleMobileNav = () => {
+  if (isPageLoading.value) return;
+  showMobileNav.value = !showMobileNav.value;
+  showUserMenu.value = false;
+};
 const toggleDashboardMenu = () => {
   if (isPageLoading.value) return;
   showDashboardMenu.value = !showDashboardMenu.value;
@@ -951,6 +977,7 @@ const toggleUserMenu = () => {
   showDashboardMenu.value = false;
 };
 const closeFloatingMenus = () => {
+  showMobileNav.value = false;
   showUserMenu.value = false;
   showDashboardMenu.value = false;
 };
@@ -2313,6 +2340,377 @@ watch(
   }
   .switch {
     align-self: flex-end;
+  }
+}
+</style>
+
+<!--
+  TRANSACTIONS MOBILE TOPBAR + SUBMENU CONSISTENCY PATCH
+  This final scoped block intentionally comes last so Documents uses the same
+  mobile-only topbar, menu layout, dark submenu panel, icons, and active accent
+  as the Transactions page.
+-->
+<style scoped>
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle span {
+  display: block;
+  width: 21px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto !important;
+    min-height: 64px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  .topbar-left {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .brand-kicker {
+    font-size: 9px !important;
+    line-height: 1.05 !important;
+  }
+
+  .brand-text {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .user-menu {
+    order: 3 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .user-menu-trigger {
+    width: auto !important;
+    min-height: 42px !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 11px !important;
+  }
+
+  .user-id {
+    display: none !important;
+  }
+
+  .user-name {
+    display: inline !important;
+    font-size: 11px !important;
+  }
+
+  .user-caret {
+    display: none !important;
+  }
+
+  .topbar-nav {
+    order: 4 !important;
+    width: 100% !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: space-between !important;
+    padding: 11px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .nav-item.active,
+  .dashboard-trigger.active,
+  .nav-item:hover,
+  .dashboard-trigger:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  .nav-item.active::after,
+  .dashboard-active::after {
+    display: none !important;
+  }
+
+  .dashboard-menu {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .dashboard-caret {
+    width: 14px !important;
+    height: 14px !important;
+    flex: 0 0 14px !important;
+  }
+
+  .dashboard-caret path {
+    fill: currentColor !important;
+  }
+
+  .mega-dropdown {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: linear-gradient(180deg, #062f68 0%, #052452 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: none !important;
+    z-index: 1001 !important;
+  }
+
+  .mega-dropdown::before {
+    display: none !important;
+  }
+
+  .mega-dropdown-head {
+    display: block !important;
+    padding: 0 0 12px !important;
+    margin: 0 0 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .mega-kicker {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #93c5fd !important;
+  }
+
+  .mega-dropdown-head h3,
+  .mega-dropdown-head p {
+    display: none !important;
+  }
+
+  .mega-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mega-item {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 46px 1fr 22px !important;
+    align-items: center !important;
+    min-height: 74px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: hidden !important;
+  }
+
+  .mega-item::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 auto 0 0 !important;
+    width: 4px !important;
+    background: transparent !important;
+  }
+
+  .mega-item:hover,
+  .mega-item.active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(147, 197, 253, 0.4) !important;
+  }
+
+  .mega-item.active::before {
+    background: linear-gradient(180deg, #1d4ed8, #0f3d87) !important;
+  }
+
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    border-radius: 14px !important;
+    padding: 11px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: none !important;
+  }
+
+  .mega-item:first-child .mega-icon {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  :deep(.mega-icon svg) {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    display: block !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.85 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    transform: none !important;
+  }
+
+  :deep(.mega-icon svg circle[fill="currentColor"]),
+  :deep(.mega-icon svg path[fill="currentColor"]) {
+    fill: currentColor !important;
+    stroke: none !important;
+  }
+
+  .mega-copy strong {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .mega-copy small {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  .mega-arrow {
+    display: grid !important;
+    width: 22px !important;
+    height: 22px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+  }
+
+  .mega-arrow svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mega-arrow svg path {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.4 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .mega-footer {
+    margin-top: 10px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .mega-footer span {
+    display: none !important;
+  }
+
+  .mega-footer button {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    color: #0d468f !important;
+    font-weight: 900 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-wrap {
+    gap: 10px !important;
+  }
+
+  .user-menu-trigger {
+    gap: 8px !important;
+  }
+
+  .topbar {
+    padding-inline: 14px !important;
   }
 }
 </style>

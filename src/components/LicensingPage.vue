@@ -23,7 +23,22 @@
         </button>
       </div>
 
-      <nav class="topbar-nav" aria-label="Primary navigation">
+      <!-- Mobile hamburger copied from Home topbar -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click.stop="toggleMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav
+        class="topbar-nav"
+        :class="{ 'mobile-open': showMobileNav }"
+        aria-label="Primary navigation"
+      >
         <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
           LTO OFFICIAL WEBPAGE
         </a>
@@ -37,7 +52,7 @@
             type="button"
             class="nav-item dashboard-active dashboard-trigger"
             :class="{ active: isDashboardSectionActive }"
-            @click="toggleDashboardMenu"
+            @click.stop="toggleDashboardMenu"
           >
             DASHBOARD
             <svg class="dashboard-caret" viewBox="0 0 24 24" aria-hidden="true">
@@ -85,7 +100,11 @@
       </nav>
 
       <div ref="userMenuRef" class="user-menu">
-        <button class="user-menu-trigger" type="button" @click="toggleUserMenu">
+        <button
+          class="user-menu-trigger"
+          type="button"
+          @click.stop="toggleUserMenu"
+        >
           <div class="user-avatar">H</div>
           <div class="user-info">
             <span class="user-name">HIDALGO</span>
@@ -823,6 +842,7 @@ const router = useRouter();
 const { settings: accessibilitySettings } = useAccessibility();
 
 const isPageLoading = ref(false);
+const showMobileNav = ref(false);
 const showUserMenu = ref(false);
 const showDashboardMenu = ref(false);
 const showLogoutModal = ref(false);
@@ -1735,6 +1755,7 @@ const delay = (ms: number) =>
 const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
   isPageLoading.value = true;
+  showMobileNav.value = false;
   showUserMenu.value = false;
   showDashboardMenu.value = false;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -1780,6 +1801,12 @@ const openOfficialWebsite = async () => {
 };
 
 const goToDashboardItem = (route: string) => navigateTo(route);
+
+const toggleMobileNav = () => {
+  if (isPageLoading.value) return;
+  showMobileNav.value = !showMobileNav.value;
+  showUserMenu.value = false;
+};
 
 const toggleDashboardMenu = () => {
   if (isPageLoading.value) return;
@@ -1938,7 +1965,9 @@ watch(
   justify-content: space-between;
   padding: 0 28px;
   box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
-  z-index: 5;
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
 }
 
 .topbar-left,
@@ -1989,6 +2018,29 @@ watch(
 
 .topbar-nav {
   gap: 22px;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle span {
+  display: block;
+  width: 21px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .nav-item {
@@ -3545,14 +3597,85 @@ watch(
 @media (max-width: 1000px) {
   .topbar {
     height: auto;
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    min-height: 64px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+    position: relative;
+    z-index: 80;
+  }
+
+  .topbar-left {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .user-id {
+    display: none;
   }
 
   .topbar-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    order: 4;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(5, 36, 82, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: visible;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .dashboard-menu {
+    width: 100%;
+  }
+
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+    border-radius: 18px;
+    transform: none;
+    z-index: 1001;
+  }
+
+  .mega-dropdown::before {
+    display: none;
   }
 
   .modal-hero,
@@ -3571,24 +3694,34 @@ watch(
 
 @media (max-width: 900px) {
   .mega-dropdown {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: min(94vw, 760px);
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+    transform: none;
+    border-radius: 18px;
+  }
+
+  .mega-dropdown::before {
+    display: none;
   }
 
   .mega-grid {
     grid-template-columns: 1fr;
   }
 
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
   .user-menu-trigger {
-    width: 100%;
+    width: auto;
     justify-content: center;
   }
 
   .user-dropdown {
-    right: 50%;
-    transform: translateX(50%);
+    right: 0;
+    transform: none;
   }
 }
 
@@ -3649,8 +3782,31 @@ watch(
 }
 
 @media (max-width: 640px) {
+  .topbar {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+  }
+
   .brand-text {
-    font-size: 20px;
+    font-size: 16px;
+  }
+
+  .brand-kicker {
+    font-size: 9px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .user-name {
+    font-size: 11px;
   }
 
   .selection-indicator,
@@ -3674,18 +3830,31 @@ watch(
   }
 
   .mega-dropdown {
-    position: fixed;
-    top: 154px;
-    left: 12px;
-    right: 12px;
-    width: auto;
-    max-height: calc(100vh - 176px);
-    overflow-y: auto;
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
     transform: none;
   }
 
   .mega-dropdown::before {
     display: none;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .user-dropdown {
+    position: static;
+    margin-top: 8px;
   }
 
   .mega-item {
@@ -3699,6 +3868,304 @@ watch(
 
   .switch {
     align-self: flex-end;
+  }
+}
+</style>
+
+<!--
+  MOBILE TOPBAR CONSISTENCY PATCH
+  This final scoped block intentionally comes last so it overrides the older
+  licensing-only mobile header rules above. It matches the Home page mobile
+  topbar spacing and keeps the Dashboard submenu fully visible.
+-->
+<style scoped>
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto !important;
+    min-height: 64px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  .topbar-left {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .brand-kicker {
+    font-size: 9px !important;
+    line-height: 1.05 !important;
+  }
+
+  .brand-text {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .user-menu {
+    order: 3 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .user-menu-trigger {
+    width: auto !important;
+    min-height: 42px !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 11px !important;
+  }
+
+  .user-id {
+    display: none !important;
+  }
+
+  .user-name {
+    display: inline !important;
+    font-size: 11px !important;
+  }
+
+  .user-caret {
+    display: none !important;
+  }
+
+  .topbar-nav {
+    order: 4 !important;
+    width: 100% !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: space-between !important;
+    padding: 11px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .nav-item.active,
+  .dashboard-trigger.active,
+  .nav-item:hover,
+  .dashboard-trigger:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  .dashboard-active::after {
+    display: none !important;
+  }
+
+  .dashboard-menu {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .dashboard-caret {
+    width: 14px !important;
+    height: 14px !important;
+    flex: 0 0 14px !important;
+  }
+
+  .dashboard-caret path {
+    fill: currentColor !important;
+  }
+
+  .mega-dropdown {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: linear-gradient(180deg, #062f68 0%, #052452 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: none !important;
+    z-index: 1001 !important;
+  }
+
+  .mega-dropdown::before {
+    display: none !important;
+  }
+
+  .mega-dropdown-head {
+    display: block !important;
+    padding: 0 0 12px !important;
+    margin: 0 0 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .mega-kicker {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #93c5fd !important;
+  }
+
+  .mega-dropdown-head h3,
+  .mega-dropdown-head p {
+    display: none !important;
+  }
+
+  .mega-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mega-item {
+    display: grid !important;
+    grid-template-columns: 46px 1fr 22px !important;
+    align-items: center !important;
+    min-height: 74px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .mega-item:hover,
+  .mega-item.active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(147, 197, 253, 0.4) !important;
+  }
+
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    padding: 11px !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  .mega-copy strong {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .mega-copy small {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  .mega-arrow {
+    display: grid !important;
+    width: 22px !important;
+    height: 22px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+  }
+
+  .mega-arrow svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mega-arrow svg path {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.4 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .mega-footer {
+    margin-top: 10px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .mega-footer span {
+    display: none !important;
+  }
+
+  .mega-footer button {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    color: #0d468f !important;
+    font-weight: 900 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-wrap {
+    gap: 10px !important;
+  }
+
+  .user-menu-trigger {
+    gap: 8px !important;
+  }
+
+  .topbar {
+    padding-inline: 14px !important;
   }
 }
 </style>

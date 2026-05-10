@@ -1,0 +1,504 @@
+/* ================================================================
+   mobile-global.css
+   Place this import in main.ts  →  import '@/assets/mobile-global.css'
+   It targets  html.mobile-view  so every page/component is affected
+   automatically when useMobileView() is active.
+   ================================================================ */
+
+/* ──────────────────────────────────────────────────────────────
+   TOPBAR
+────────────────────────────────────────────────────────────── */
+html.mobile-view .topbar {
+  height: auto;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  gap: 10px;
+  position: relative;
+}
+
+html.mobile-view .topbar-left {
+  flex: 1;
+  min-width: 0;
+}
+
+html.mobile-view .brand-text {
+  font-size: 15px;
+}
+
+html.mobile-view .brand-kicker {
+  font-size: 9px;
+}
+
+html.mobile-view .brand-logo {
+  width: 32px;
+  height: 32px;
+}
+
+/* Show the hamburger, hide it on desktop */
+html.mobile-view .mobile-nav-toggle {
+  display: flex;
+  order: 2;
+}
+
+/* Nav collapses behind the hamburger */
+html.mobile-view .topbar-nav {
+  order: 4;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease;
+}
+
+html.mobile-view .topbar-nav.mobile-open {
+  max-height: 260px;
+}
+
+html.mobile-view .nav-item {
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html.mobile-view .user-menu {
+  order: 3;
+}
+
+html.mobile-view .user-id {
+  display: none;
+}
+
+html.mobile-view .user-name {
+  font-size: 11px;
+}
+
+html.mobile-view .user-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  flex: 0 0 26px;
+}
+
+html.mobile-view .user-caret {
+  display: none;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   HERO / MAIN CONTENT AREA
+────────────────────────────────────────────────────────────── */
+html.mobile-view .hero {
+  padding: 20px 12px 20px;
+}
+
+html.mobile-view .hero-logo {
+  width: 72px;
+  height: 72px;
+}
+
+html.mobile-view .hero-title {
+  font-size: 26px;
+}
+
+html.mobile-view .hero-subtitle {
+  font-size: 16px;
+}
+
+html.mobile-view .hero-caption {
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SERVICE CARDS — single-column, horizontal layout
+────────────────────────────────────────────────────────────── */
+html.mobile-view .cards {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* All service cards become a horizontal row */
+html.mobile-view .service-card {
+  min-height: unset;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+/* Icon cards: compact icon + text side by side */
+html.mobile-view .clickable-card .card-top-media {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+html.mobile-view .icon-shell {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+}
+
+html.mobile-view .premium-icon {
+  width: 26px;
+  height: 26px;
+}
+
+html.mobile-view .card-title {
+  font-size: 15px;
+  min-height: unset;
+  margin-bottom: 4px;
+  justify-content: flex-start;
+}
+
+html.mobile-view .card-desc {
+  font-size: 12px;
+  min-height: unset;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   DIGITAL ID CARD — stack vertically on mobile
+────────────────────────────────────────────────────────────── */
+html.mobile-view .digital-id-card {
+  flex-direction: column !important;
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px;
+}
+
+html.mobile-view .digital-id-card .card-top-media {
+  width: 100%;
+  height: auto;
+  margin-bottom: 0;
+  display: flex;
+  justify-content: center;
+}
+
+html.mobile-view .mini-id-card {
+  width: 220px;
+  min-height: 130px;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+html.mobile-view .mini-id-header {
+  margin-bottom: 10px;
+}
+
+html.mobile-view .mini-id-logo {
+  width: 22px;
+  height: 22px;
+}
+
+html.mobile-view .mini-id-header-text span {
+  font-size: 8px;
+}
+
+html.mobile-view .mini-id-header-text small {
+  font-size: 7px;
+}
+
+html.mobile-view .mini-id-body {
+  gap: 10px;
+}
+
+html.mobile-view .mini-id-photo {
+  width: 46px;
+  height: 56px;
+  border-radius: 6px;
+}
+
+html.mobile-view .mini-id-meta strong {
+  font-size: 10px;
+}
+
+html.mobile-view .mini-id-meta span {
+  font-size: 8px;
+}
+
+html.mobile-view .mini-id-meta small {
+  font-size: 7px;
+}
+
+html.mobile-view .digital-id-card .card-body-text {
+  text-align: center;
+}
+
+html.mobile-view .digital-id-card .card-title {
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+html.mobile-view .digital-id-card .card-desc {
+  text-align: center;
+  font-size: 13px;
+}
+
+html.mobile-view .digital-id-card .view-btn {
+  margin-top: 4px;
+  margin-left: 0;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   DASHBOARD LOWER & NEWS SECTIONS
+────────────────────────────────────────────────────────────── */
+html.mobile-view .dashboard-lower {
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+html.mobile-view .dashboard-news-grid {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+html.mobile-view .dashboard-news-section {
+  margin-top: 14px;
+}
+
+html.mobile-view .news-panel-head {
+  flex-direction: column;
+  gap: 10px;
+}
+
+html.mobile-view .news-head-btn {
+  width: 100%;
+  text-align: center;
+}
+
+html.mobile-view .news-panel-head h3 {
+  font-size: 18px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   ACTIVITY LIST (dashboard preview)
+────────────────────────────────────────────────────────────── */
+html.mobile-view .activity-item {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+}
+
+html.mobile-view .activity-copy strong {
+  font-size: 13px;
+}
+
+html.mobile-view .activity-copy span {
+  font-size: 12px;
+}
+
+html.mobile-view .activity-meta {
+  display: none;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION HEADINGS
+────────────────────────────────────────────────────────────── */
+html.mobile-view .section-head h3 {
+  font-size: 16px;
+}
+
+html.mobile-view .help-card h3 {
+  font-size: 16px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   FOOTER
+────────────────────────────────────────────────────────────── */
+html.mobile-view .footer {
+  grid-template-columns: 1fr;
+  height: auto;
+  gap: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+html.mobile-view .footer-left,
+html.mobile-view .footer-center,
+html.mobile-view .footer-right {
+  justify-self: center;
+}
+
+html.mobile-view .footer-center span {
+  font-size: 11px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   DISABLE HOVER LIFTS ON TOUCH/MOBILE
+────────────────────────────────────────────────────────────── */
+html.mobile-view .service-card:hover,
+html.mobile-view .clickable-card:hover,
+html.mobile-view .digital-id-card:hover {
+  transform: none;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   FULL ID MODAL (mobile-view overrides)
+────────────────────────────────────────────────────────────── */
+html.mobile-view .modal-overlay {
+  padding: 10px;
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+html.mobile-view .modal-card {
+  width: 100%;
+  max-width: 100%;
+  margin: auto;
+}
+
+html.mobile-view .full-id-card {
+  padding: 16px 14px 20px;
+  border-radius: 18px;
+}
+
+html.mobile-view .full-id-top {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+html.mobile-view .full-id-brand {
+  align-items: center;
+  gap: 10px;
+}
+
+html.mobile-view .full-id-logo {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+html.mobile-view .full-id-agency {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+html.mobile-view .full-id-sub {
+  font-size: 11px;
+}
+
+html.mobile-view .full-id-badge {
+  align-self: flex-start;
+  padding: 5px 12px;
+  font-size: 11px;
+}
+
+html.mobile-view .full-id-main {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+html.mobile-view .full-id-photo {
+  width: 120px;
+  height: 148px;
+  border-radius: 14px;
+  margin: 0 auto;
+  display: block;
+}
+
+html.mobile-view .full-id-details {
+  gap: 12px;
+}
+
+html.mobile-view .detail-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+html.mobile-view .detail-row {
+  padding: 10px 12px;
+  border-radius: 12px;
+  gap: 4px;
+}
+
+html.mobile-view .detail-row .label {
+  font-size: 10px;
+}
+
+html.mobile-view .detail-row strong {
+  font-size: 13px;
+  word-break: break-word;
+}
+
+html.mobile-view .full-id-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  align-items: center;
+  text-align: center;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   GENERIC LAYOUT HELPERS (reusable across all pages)
+   Use these classes on any page for consistent mobile spacing.
+────────────────────────────────────────────────────────────── */
+
+/* Page wrapper used by inner pages (e.g. Licensing, Vehicle) */
+html.mobile-view .page-content {
+  padding: 16px 12px 24px;
+}
+
+/* Two-column layouts become single-column */
+html.mobile-view .two-col-grid,
+html.mobile-view .split-layout {
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+}
+
+/* Sidebar panels stack below main content */
+html.mobile-view .sidebar {
+  width: 100% !important;
+  min-width: unset !important;
+}
+
+/* Generic section titles */
+html.mobile-view .section-title,
+html.mobile-view .page-title {
+  font-size: 22px !important;
+}
+
+/* Generic card padding reduction */
+html.mobile-view .card,
+html.mobile-view .panel {
+  padding: 14px !important;
+  border-radius: 14px !important;
+}
+
+/* Full-width buttons on mobile */
+html.mobile-view .action-btn,
+html.mobile-view .submit-btn,
+html.mobile-view .primary-btn {
+  width: 100% !important;
+}
+
+/* Table → readable on narrow screens */
+html.mobile-view table {
+  font-size: 12px;
+}
+
+html.mobile-view th,
+html.mobile-view td {
+  padding: 8px 10px !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   VIEW-TOGGLE FAB — hidden globally (auto-detect replaces it)
+────────────────────────────────────────────────────────────── */
+.view-toggle-fab {
+  display: none !important;
+}

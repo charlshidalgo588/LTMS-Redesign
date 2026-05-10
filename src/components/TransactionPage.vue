@@ -18,28 +18,41 @@
           <img class="brand-logo" :src="logo" alt="LTO Logo" />
           <div class="brand-copy">
             <span class="brand-kicker">LTMS PORTAL</span>
-            <span class="brand-text">TRANSACTIONS</span>
+            <span class="brand-text">VEHICLE</span>
           </div>
         </button>
       </div>
 
-      <nav class="topbar-nav" aria-label="Primary navigation">
+      <!-- Mobile hamburger copied from Home topbar -->
+      <button
+        class="mobile-nav-toggle"
+        type="button"
+        :aria-expanded="showMobileNav"
+        aria-label="Toggle navigation"
+        @click.stop="toggleMobileNav"
+      >
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav
+        class="topbar-nav"
+        :class="{ 'mobile-open': showMobileNav }"
+        aria-label="Primary navigation"
+      >
         <a href="#" class="nav-item" @click.prevent="openOfficialWebsite">
           LTO OFFICIAL WEBPAGE
         </a>
-
         <a href="#" class="nav-item" @click.prevent="goToELearning">
           E-LEARNING
         </a>
-
-        <a href="#" class="nav-item" @click.prevent="goToContact"> CONTACT </a>
+        <a href="#" class="nav-item" @click.prevent="goToContact">CONTACT</a>
 
         <div ref="dashboardMenuRef" class="dashboard-menu">
           <button
             type="button"
             class="nav-item dashboard-active dashboard-trigger"
             :class="{ active: isDashboardSectionActive }"
-            @click="toggleDashboardMenu"
+            @click.stop="toggleDashboardMenu"
           >
             DASHBOARD
             <svg class="dashboard-caret" viewBox="0 0 24 24" aria-hidden="true">
@@ -66,16 +79,12 @@
                 @click="goToDashboardItem(item.route)"
               >
                 <span class="mega-icon" v-html="item.icon"></span>
-
                 <span class="mega-copy">
                   <strong>{{ item.title }}</strong>
                   <small v-html="item.description"></small>
                 </span>
-
                 <span class="mega-arrow" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
+                  <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
                 </span>
               </button>
             </div>
@@ -91,7 +100,11 @@
       </nav>
 
       <div ref="userMenuRef" class="user-menu">
-        <button class="user-menu-trigger" type="button" @click="toggleUserMenu">
+        <button
+          class="user-menu-trigger"
+          type="button"
+          @click.stop="toggleUserMenu"
+        >
           <div class="user-avatar">H</div>
           <div class="user-info">
             <span class="user-name">HIDALGO</span>
@@ -113,7 +126,6 @@
           <button type="button" class="user-dropdown-item" @click="goToProfile">
             Profile
           </button>
-
           <button
             type="button"
             class="user-dropdown-item"
@@ -121,7 +133,6 @@
           >
             Settings
           </button>
-
           <button
             type="button"
             class="user-dropdown-item danger"
@@ -141,130 +152,135 @@
       </div>
 
       <nav class="breadcrumb-bar" aria-label="Breadcrumb">
-        <button
-          v-for="(item, index) in breadcrumbItems"
-          :key="`${item.label}-${index}`"
-          type="button"
-          class="breadcrumb-item"
-          :class="{ current: index === breadcrumbItems.length - 1 }"
-          @click="
-            index === breadcrumbItems.length - 1
-              ? undefined
-              : navigateTo(item.route)
-          "
-        >
-          <span v-if="index > 0" class="breadcrumb-separator">/</span>
-          <span>{{ item.label }}</span>
+        <button type="button" class="breadcrumb-item" @click="goToDashboard">
+          Dashboard
+        </button>
+        <span class="breadcrumb-separator">/</span>
+        <button type="button" class="breadcrumb-item current">
+          Vehicle Application
         </button>
       </nav>
 
-      <section class="transactions-modal">
+      <section class="vehicle-modal">
         <div class="modal-top-strip"></div>
 
-        <div class="transaction-header">
-          <div class="transaction-title-wrap">
-            <span class="transaction-title-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z"
-                />
-                <path d="M8.5 8h7" />
-                <path d="M8.5 11.5h7" />
-                <path d="M8.5 15h4.5" />
+        <div class="progress-track" aria-label="Vehicle application progress">
+          <div
+            v-for="step in steps"
+            :key="step.number"
+            class="progress-step"
+            :class="{
+              active: currentStep === step.number,
+              complete: currentStep > step.number,
+            }"
+          >
+            <span class="progress-number">
+              <svg v-if="currentStep > step.number" viewBox="0 0 24 24">
+                <path d="M5 12.5l4.2 4.2L19 7" />
               </svg>
+              <template v-else>{{ step.number }}</template>
             </span>
+            <span>{{ step.label }}</span>
+          </div>
+        </div>
+
+        <!-- STEP 1 -->
+        <template v-if="currentStep === 1">
+          <div class="modal-hero">
             <div>
-              <h1>Transaction Overview</h1>
-              <p>
-                Track open applications, completed requests, and payment
-                activity.
+              <div class="agency-kicker">
+                <span class="kicker-dot"></span>
+                Motor Vehicle Services
+              </div>
+
+              <h1>Create Vehicle Application</h1>
+
+              <p class="client-id">
+                Client Profile <span>|</span> ID: {{ clientId }}
               </p>
+
+              <p class="instruction">
+                Select the motor vehicle linked to your LTMS account.
+              </p>
+            </div>
+
+            <div class="step-card">
+              <span>Step 1 of 4</span>
+              <strong>Select Vehicle</strong>
             </div>
           </div>
 
-          <div class="client-pill">
-            <span>Client ID</span>
-            <strong>{{ clientId }}</strong>
-          </div>
-        </div>
+          <div class="vehicle-select-panel">
+            <label class="field-label">Motor Vehicle</label>
 
-        <div class="transaction-summary-grid" aria-label="Transaction summary">
-          <div class="summary-tile blue">
-            <span>Open Transactions</span>
-            <strong>{{ openTransactions.length }}</strong>
-            <small>Active requests requiring action or review</small>
-          </div>
-
-          <div class="summary-tile green">
-            <span>Closed Transactions</span>
-            <strong>{{ closedTransactions.length }}</strong>
-            <small>Completed or archived transaction records</small>
-          </div>
-
-          <div class="summary-tile amber">
-            <span>Pending Payment</span>
-            <strong>{{ pendingPaymentCount }}</strong>
-            <small>Transactions waiting for payment confirmation</small>
-          </div>
-        </div>
-
-        <div class="transaction-tabs">
-          <button
-            type="button"
-            :class="{ active: activeTab === 'open' }"
-            @click="setTab('open')"
-          >
-            Open
-          </button>
-
-          <button
-            type="button"
-            :class="{ active: activeTab === 'closed' }"
-            @click="setTab('closed')"
-          >
-            Closed
-          </button>
-        </div>
-
-        <div class="transaction-toolbar">
-          <div class="search-field">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6.25" />
-              <path d="M16 16l4 4" />
-            </svg>
-            <input
-              v-model.trim="searchTerm"
-              type="search"
-              placeholder="Search by reference number, service, or status"
-            />
-          </div>
-
-          <select
-            v-model="serviceFilter"
-            class="filter-select"
-            aria-label="Filter by service"
-          >
-            <option value="all">All Services</option>
-            <option value="Licensing">Licensing</option>
-            <option value="Vehicle">Vehicle</option>
-            <option value="Documents">Documents</option>
-            <option value="Violations">Violations</option>
-          </select>
-        </div>
-
-        <div class="transaction-content">
-          <div v-if="filteredTransactions.length === 0" class="empty-state">
-            <div class="empty-icon" aria-hidden="true"></div>
-            <p>NO TRANSACTIONS FOUND</p>
-          </div>
-
-          <div v-else class="transaction-list">
-            <article
-              v-for="transaction in filteredTransactions"
-              :key="transaction.id"
-              class="transaction-row"
+            <button
+              type="button"
+              class="vehicle-dropdown-trigger"
+              @click="showVehiclePicker = true"
             >
-              <div class="transaction-row-icon" aria-hidden="true">
+              <div class="vehicle-trigger-copy">
+                <span>{{ selectedVehicle.plateNo }}</span>
+                <strong
+                  >{{ selectedVehicle.make }}
+                  {{ selectedVehicle.model }}</strong
+                >
+                <small>{{ selectedVehicle.mvFileNo }}</small>
+              </div>
+
+              <svg viewBox="0 0 24 24">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            <div class="vehicle-card">
+              <div class="vehicle-card-icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18"
+                  />
+                  <path
+                    d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z"
+                  />
+                  <circle
+                    cx="7.5"
+                    cy="15.8"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="16.5"
+                    cy="15.8"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+              </div>
+
+              <div class="vehicle-card-copy">
+                <div class="vehicle-card-top">
+                  <strong>{{ selectedVehicle.plateNo }}</strong>
+                  <span class="status-chip">Linked Vehicle</span>
+                </div>
+                <p>
+                  {{ selectedVehicle.year }} {{ selectedVehicle.make }}
+                  {{ selectedVehicle.model }} ·
+                  {{ selectedVehicle.classification }}
+                </p>
+                <small>
+                  Registration valid until {{ selectedVehicle.validUntil }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- STEP 2 -->
+        <template v-else-if="currentStep === 2">
+          <div class="form-header">
+            <div class="form-title">
+              <span class="form-title-icon">
                 <svg viewBox="0 0 24 24">
                   <path
                     d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z"
@@ -273,44 +289,263 @@
                   <path d="M8.5 11.5h7" />
                   <path d="M8.5 15h4.5" />
                 </svg>
-              </div>
+              </span>
 
-              <div class="transaction-row-copy">
-                <div class="transaction-row-head">
-                  <strong>{{ transaction.title }}</strong>
-                  <span class="status-chip" :class="transaction.statusClass">
-                    {{ transaction.status }}
-                  </span>
-                </div>
-                <span>{{ transaction.reference }}</span>
-                <small>
-                  {{ transaction.service }} • {{ transaction.date }} •
-                  {{ transaction.amount }}
-                </small>
+              <div>
+                <h1>Select Vehicle Application Type</h1>
+                <p>
+                  Choose the transaction you want to apply for this vehicle.
+                </p>
               </div>
+            </div>
 
-              <div class="transaction-row-actions">
-                <button
-                  type="button"
-                  @click="openTransactionDetails(transaction)"
-                >
-                  View Details
-                </button>
-              </div>
-            </article>
+            <div class="step-card compact">
+              <span>Step 2 of 4</span>
+              <strong>Application Type</strong>
+            </div>
           </div>
+
+          <div class="notice-card">
+            Select one application type applicable to your vehicle transaction.
+          </div>
+
+          <div class="application-type-grid">
+            <button
+              v-for="type in vehicleApplicationTypes"
+              :key="type.value"
+              type="button"
+              class="application-type"
+              :class="{ selected: selectedApplicationType === type.value }"
+              @click="selectApplicationType(type.value)"
+            >
+              <span
+                class="application-check application-radio"
+                aria-hidden="true"
+              >
+                <svg
+                  v-if="selectedApplicationType === type.value"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M5 12.5l4.2 4.2L19 7" />
+                </svg>
+              </span>
+
+              <span class="application-type-label">{{ type.label }}</span>
+              <strong>{{ type.description }}</strong>
+            </button>
+          </div>
+        </template>
+
+        <!-- STEP 3 -->
+        <template v-else-if="currentStep === 3">
+          <div class="form-header">
+            <div class="form-title">
+              <span class="form-title-icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z"
+                  />
+                  <path d="M14.5 4.25v4h4" />
+                  <path d="M8.5 12h7" />
+                  <path d="M8.5 15.5h5" />
+                </svg>
+              </span>
+
+              <div>
+                <h1>Vehicle Details & Documents</h1>
+                <p>
+                  Review your linked vehicle information and upload supporting
+                  documents.
+                </p>
+              </div>
+            </div>
+
+            <div class="step-card compact">
+              <span>Step 3 of 4</span>
+              <strong>Details & Documents</strong>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-card">
+              <span>Plate Number</span>
+              <strong>{{ selectedVehicle.plateNo }}</strong>
+            </div>
+
+            <div class="detail-card">
+              <span>MV File Number</span>
+              <strong>{{ selectedVehicle.mvFileNo }}</strong>
+            </div>
+
+            <div class="detail-card">
+              <span>Engine Number</span>
+              <strong>{{ selectedVehicle.engineNo }}</strong>
+            </div>
+
+            <div class="detail-card">
+              <span>Chassis Number</span>
+              <strong>{{ selectedVehicle.chassisNo }}</strong>
+            </div>
+
+            <div class="detail-card">
+              <span>Classification</span>
+              <strong>{{ selectedVehicle.classification }}</strong>
+            </div>
+
+            <div class="detail-card">
+              <span>Registration Validity</span>
+              <strong>{{ selectedVehicle.validUntil }}</strong>
+            </div>
+          </div>
+
+          <div class="document-section">
+            <h2>Supporting Documents</h2>
+            <p>
+              Upload available documents for faster processing. You may also
+              continue without uploads for this prototype.
+            </p>
+
+            <div class="document-upload-grid">
+              <label
+                v-for="document in requiredDocuments"
+                :key="document.value"
+                class="upload-card"
+              >
+                <span class="upload-card-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      d="M8 3.75h6.25L19.25 8.75V19A1.75 1.75 0 0 1 17.5 20.75H8A2.75 2.75 0 0 1 5.25 18V6.5A2.75 2.75 0 0 1 8 3.75Z"
+                    />
+                    <path d="M14.25 3.75v5h5" />
+                    <path d="M12 16.25v-5" />
+                    <path d="M9.75 13.5L12 11.25l2.25 2.25" />
+                  </svg>
+                </span>
+
+                <span class="upload-card-copy">
+                  <strong>{{ document.label }}</strong>
+                  <small>{{
+                    uploadedDocuments[document.value] || "Click to upload file"
+                  }}</small>
+                </span>
+
+                <input
+                  type="file"
+                  class="file-input"
+                  @change="handleDocumentUpload($event, document.value)"
+                />
+              </label>
+            </div>
+          </div>
+        </template>
+
+        <!-- STEP 4 -->
+        <template v-else>
+          <div class="form-header">
+            <div class="form-title">
+              <span class="form-title-icon amber">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z"
+                  />
+                  <path d="M8.7 12.5l2.2 2.2 4.7-5.1" />
+                </svg>
+              </span>
+
+              <div>
+                <h1>Review Vehicle Application</h1>
+                <p>Confirm the transaction details before submitting.</p>
+              </div>
+            </div>
+
+            <div class="step-card compact">
+              <span>Step 4 of 4</span>
+              <strong>Review & Submit</strong>
+            </div>
+          </div>
+
+          <div class="review-panel">
+            <div class="review-summary">
+              <div class="summary-card">
+                <span>Vehicle</span>
+                <strong
+                  >{{ selectedVehicle.plateNo }} · {{ selectedVehicle.make }}
+                  {{ selectedVehicle.model }}</strong
+                >
+              </div>
+
+              <div class="summary-card">
+                <span>Application Type(s)</span>
+                <strong>{{
+                  selectedApplicationLabels || "No application type selected"
+                }}</strong>
+              </div>
+
+              <div class="summary-card">
+                <span>Registration Validity</span>
+                <strong>{{ selectedVehicle.validUntil }}</strong>
+              </div>
+
+              <div class="summary-card">
+                <span>Uploaded Documents</span>
+                <strong>{{ uploadedDocumentCount }} file(s)</strong>
+              </div>
+            </div>
+
+            <div class="confirmation-box">
+              <div class="confirmation-icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z"
+                  />
+                  <path d="M8.7 12.5l2.2 2.2 4.7-5.1" />
+                </svg>
+              </div>
+
+              <div>
+                <h2>Applicant declaration</h2>
+                <p>
+                  I confirm that the selected vehicle, application type, and
+                  uploaded documents are accurate and ready for LTO processing.
+                </p>
+
+                <label class="declaration-check">
+                  <input type="checkbox" v-model="isConfirmed" />
+                  <span
+                    >I have reviewed and confirm the vehicle application
+                    details.</span
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <div v-if="validationMessage" class="validation-message">
+          {{ validationMessage }}
         </div>
 
-        <div class="transaction-footer">
-          <button type="button" class="btn-back" @click="goToDashboard">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
+        <div class="modal-actions">
+          <button
+            v-if="currentStep > 1 && currentStep < 5"
+            class="btn-back"
+            type="button"
+            @click="handleBack"
+          >
+            Back
           </button>
 
-          <span>
-            Showing {{ filteredTransactions.length }} transaction record(s)
-          </span>
+          <button
+            class="btn-cancel"
+            type="button"
+            @click="showCancelConfirm = true"
+          >
+            Cancel Application
+          </button>
+
+          <button class="btn-proceed" type="button" @click="handleProceed">
+            {{ currentStep === 4 ? "Submit Application" : "Next" }}
+          </button>
         </div>
       </section>
     </main>
@@ -321,62 +556,263 @@
         <img class="footer-logo" :src="logo" alt="LTO Logo" />
         <span>MANAGEMENT INFORMATION DIVISION (MID)</span>
       </div>
-      <div class="footer-right">●</div>
+      <div class="footer-right">✦</div>
     </footer>
 
+    <!-- Vehicle picker -->
     <div
-      v-if="selectedTransaction"
-      class="details-overlay"
-      @click.self="closeTransactionDetails"
+      v-if="showVehiclePicker"
+      class="dialog-overlay"
+      @click.self="showVehiclePicker = false"
     >
-      <div class="details-card" role="dialog" aria-modal="true">
-        <div class="details-header">
+      <div class="vehicle-picker-dialog">
+        <div class="dialog-header">
           <div>
-            <span class="details-kicker">Transaction Details</span>
-            <h2>{{ selectedTransaction.title }}</h2>
+            <span class="dialog-kicker">Search Dialog</span>
+            <h2>Select Motor Vehicle</h2>
           </div>
+
           <button
             type="button"
-            class="details-close"
-            @click="closeTransactionDetails"
+            class="dialog-close"
+            @click="showVehiclePicker = false"
           >
             ×
           </button>
         </div>
 
-        <div class="details-body">
-          <div class="details-row">
-            <span>Reference Number</span>
-            <strong>{{ selectedTransaction.reference }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Service</span>
-            <strong>{{ selectedTransaction.service }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Status</span>
-            <strong>{{ selectedTransaction.status }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Date Filed</span>
-            <strong>{{ selectedTransaction.date }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Amount</span>
-            <strong>{{ selectedTransaction.amount }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Payment Method</span>
-            <strong>{{ selectedTransaction.paymentMethod }}</strong>
-          </div>
-          <div class="details-row">
-            <span>Remarks</span>
-            <strong>{{ selectedTransaction.remarks }}</strong>
-          </div>
+        <div class="search-row">
+          <input
+            v-model="vehicleSearch"
+            type="text"
+            placeholder="Search plate, make, model, or MV file number"
+          />
+          <button type="button">Search</button>
+        </div>
+
+        <button
+          v-for="vehicle in filteredVehicles"
+          :key="vehicle.plateNo"
+          type="button"
+          class="vehicle-result"
+          @click="selectVehicle(vehicle)"
+        >
+          <span class="vehicle-result-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18"
+              />
+              <path
+                d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z"
+              />
+            </svg>
+          </span>
+
+          <span class="vehicle-result-copy">
+            <strong>{{ vehicle.plateNo }}</strong>
+            <small
+              >{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }} ·
+              {{ vehicle.mvFileNo }}</small
+            >
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm dialogs -->
+    <div v-if="showCancelConfirm || showSubmitConfirm" class="confirm-overlay">
+      <div class="confirm-dialog">
+        <div
+          class="confirm-dialog-icon"
+          :class="{ danger: showCancelConfirm, submit: showSubmitConfirm }"
+        >
+          <svg v-if="showCancelConfirm" viewBox="0 0 24 24">
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+            <path
+              d="M10.3 4.5h3.4L21 18.25A1.5 1.5 0 0 1 19.65 20.5H4.35A1.5 1.5 0 0 1 3 18.25L10.3 4.5Z"
+            />
+          </svg>
+
+          <svg v-else viewBox="0 0 24 24">
+            <path
+              d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z"
+            />
+            <path d="M8.7 12.5l2.2 2.2 4.7-5.1" />
+          </svg>
+        </div>
+
+        <h2>
+          {{
+            showCancelConfirm
+              ? "Cancel application?"
+              : "Submit vehicle application?"
+          }}
+        </h2>
+
+        <p>
+          {{
+            showCancelConfirm
+              ? "This will cancel your current vehicle application and return you to the dashboard."
+              : "Please confirm that all vehicle application information is correct before submission."
+          }}
+        </p>
+
+        <div class="confirm-actions">
+          <button
+            class="btn-dialog-secondary"
+            type="button"
+            @click="closeConfirmDialogs"
+          >
+            {{ showCancelConfirm ? "Keep Editing" : "Review Again" }}
+          </button>
+
+          <button
+            class="btn-dialog-primary"
+            :class="{ danger: showCancelConfirm }"
+            type="button"
+            @click="showCancelConfirm ? confirmCancel() : confirmSubmit()"
+          >
+            {{ showCancelConfirm ? "Yes, Cancel" : "Confirm Submit" }}
+          </button>
         </div>
       </div>
     </div>
 
+    <!-- Success state -->
+    <div v-if="showSuccessModal" class="confirm-overlay">
+      <div class="success-dialog">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 12.5l4.2 4.2L19 7" />
+            <path d="M21 12a9 9 0 1 1-3.4-7.05" />
+          </svg>
+        </div>
+
+        <h2>Vehicle Application Submitted</h2>
+        <p>
+          Your vehicle transaction has been prepared successfully. Keep your
+          reference number for tracking.
+        </p>
+
+        <div class="reference-card">
+          <span>Reference Number</span>
+          <strong>{{ referenceNumber }}</strong>
+        </div>
+
+        <button
+          type="button"
+          class="btn-proceed success-btn"
+          @click="goToDashboard"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div
+      v-if="showSettingsModal"
+      class="settings-modal-overlay"
+      @click.self="closeSettingsModal"
+    >
+      <div
+        class="settings-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+      >
+        <div class="settings-modal-header">
+          <div>
+            <span class="settings-modal-kicker">Accessibility</span>
+            <h3 id="settings-modal-title">Settings</h3>
+          </div>
+
+          <button
+            type="button"
+            class="settings-close-btn"
+            :disabled="isPageLoading"
+            @click="closeSettingsModal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="settings-modal-body">
+          <div class="settings-option-card">
+            <div class="settings-option-copy">
+              <strong>Dark Mode</strong>
+              <span
+                >Use a darker color scheme for better low-light viewing.</span
+              >
+            </div>
+            <label class="switch">
+              <input v-model="accessibilitySettings.darkMode" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-option-card">
+            <div class="settings-option-copy">
+              <strong>Larger Text</strong>
+              <span>Increase text size to improve readability.</span>
+            </div>
+            <label class="switch">
+              <input
+                v-model="accessibilitySettings.largeText"
+                type="checkbox"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-option-card">
+            <div class="settings-option-copy">
+              <strong>Reduced Motion</strong>
+              <span
+                >Minimize animations and transitions across the interface.</span
+              >
+            </div>
+            <label class="switch">
+              <input
+                v-model="accessibilitySettings.reducedMotion"
+                type="checkbox"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-option-card">
+            <div class="settings-option-copy">
+              <strong>High Contrast</strong>
+              <span
+                >Increase contrast to improve visibility of interface
+                elements.</span
+              >
+            </div>
+            <label class="switch">
+              <input
+                v-model="accessibilitySettings.highContrast"
+                type="checkbox"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-modal-actions">
+          <button
+            type="button"
+            class="settings-done-btn"
+            @click="closeSettingsModal"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout modal -->
     <div
       v-if="showLogoutModal"
       class="logout-modal-overlay"
@@ -417,110 +853,6 @@
         </div>
       </div>
     </div>
-
-    <div
-      v-if="showSettingsModal"
-      class="settings-modal-overlay"
-      @click.self="closeSettingsModal"
-    >
-      <div
-        class="settings-modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="settings-modal-title"
-      >
-        <div class="settings-modal-header">
-          <div>
-            <span class="settings-modal-kicker">Accessibility</span>
-            <h3 id="settings-modal-title">Settings</h3>
-          </div>
-
-          <button
-            type="button"
-            class="settings-close-btn"
-            :disabled="isPageLoading"
-            @click="closeSettingsModal"
-          >
-            ×
-          </button>
-        </div>
-
-        <div class="settings-modal-body">
-          <div class="settings-option-card">
-            <div class="settings-option-copy">
-              <strong>Dark Mode</strong>
-              <span
-                >Use a darker color scheme for better low-light viewing.</span
-              >
-            </div>
-
-            <label class="switch">
-              <input v-model="accessibilitySettings.darkMode" type="checkbox" />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-option-card">
-            <div class="settings-option-copy">
-              <strong>Larger Text</strong>
-              <span>Increase text size to improve readability.</span>
-            </div>
-
-            <label class="switch">
-              <input
-                v-model="accessibilitySettings.largeText"
-                type="checkbox"
-              />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-option-card">
-            <div class="settings-option-copy">
-              <strong>Reduced Motion</strong>
-              <span
-                >Minimize animations and transitions across the interface.</span
-              >
-            </div>
-
-            <label class="switch">
-              <input
-                v-model="accessibilitySettings.reducedMotion"
-                type="checkbox"
-              />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="settings-option-card">
-            <div class="settings-option-copy">
-              <strong>High Contrast</strong>
-              <span>
-                Increase contrast to improve visibility of interface elements.
-              </span>
-            </div>
-
-            <label class="switch">
-              <input
-                v-model="accessibilitySettings.highContrast"
-                type="checkbox"
-              />
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="settings-modal-actions">
-          <button
-            type="button"
-            class="settings-done-btn"
-            @click="closeSettingsModal"
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -537,25 +869,16 @@ import { useRouter } from "vue-router";
 import logo from "../assets/logo.png";
 import { useAccessibility } from "../composables/useAccessibility";
 
-type TransactionStatus =
-  | "Pending"
-  | "For Payment"
-  | "Processing"
-  | "Completed"
-  | "Cancelled";
-
-type TransactionRecord = {
-  id: number;
-  title: string;
-  reference: string;
-  service: "Licensing" | "Vehicle" | "Documents" | "Violations";
-  date: string;
-  tab: "open" | "closed";
-  status: TransactionStatus;
-  statusClass: string;
-  amount: string;
-  paymentMethod: string;
-  remarks: string;
+type Vehicle = {
+  plateNo: string;
+  mvFileNo: string;
+  make: string;
+  model: string;
+  year: string;
+  classification: string;
+  engineNo: string;
+  chassisNo: string;
+  validUntil: string;
 };
 
 const clientId = "26-050525-2424960";
@@ -563,260 +886,181 @@ const clientId = "26-050525-2424960";
 const router = useRouter();
 const { settings: accessibilitySettings } = useAccessibility();
 
+const currentStep = ref(1);
+const selectedApplicationType = ref("renewal");
+const validationMessage = ref("");
+const isConfirmed = ref(false);
 const isPageLoading = ref(false);
+const showMobileNav = ref(false);
 const showUserMenu = ref(false);
 const showDashboardMenu = ref(false);
-const showLogoutModal = ref(false);
+const showVehiclePicker = ref(false);
+const showCancelConfirm = ref(false);
+const showSubmitConfirm = ref(false);
+const showSuccessModal = ref(false);
 const showSettingsModal = ref(false);
+const showLogoutModal = ref(false);
+const vehicleSearch = ref("");
+
 const userMenuRef = ref<HTMLElement | null>(null);
 const dashboardMenuRef = ref<HTMLElement | null>(null);
-const activeTab = ref<"open" | "closed">("open");
-const searchTerm = ref("");
-const serviceFilter = ref("all");
-const selectedTransaction = ref<TransactionRecord | null>(null);
 
-const transactions = ref<TransactionRecord[]>([
+const linkedVehicles = ref<Vehicle[]>([
   {
-    id: 1,
-    title: "Driver's License Renewal",
-    reference: "LTMS-260505252424960-2026-001",
-    service: "Licensing",
-    date: "May 02, 2026",
-    tab: "open",
-    status: "For Payment",
-    statusClass: "for-payment",
-    amount: "₱585.00",
-    paymentMethod: "Pending Payment",
-    remarks: "Proceed to payment to continue processing.",
+    plateNo: "NAB 4827",
+    mvFileNo: "1301-00000098765",
+    make: "Toyota",
+    model: "Vios 1.3 XLE",
+    year: "2021",
+    classification: "Private Passenger Car",
+    engineNo: "2NRX987654",
+    chassisNo: "MR053HYX100987654",
+    validUntil: "May 2026",
   },
   {
-    id: 2,
-    title: "Motor Vehicle Registration Renewal",
-    reference: "LTMS-260505252424960-2026-002",
-    service: "Vehicle",
-    date: "May 01, 2026",
-    tab: "open",
-    status: "Processing",
-    statusClass: "processing",
-    amount: "₱1,250.00",
-    paymentMethod: "GCash",
-    remarks: "Payment received. Registration is under review.",
-  },
-  {
-    id: 3,
-    title: "Revision of Driver Record",
-    reference: "LTMS-260505252424960-2026-003",
-    service: "Licensing",
-    date: "April 28, 2026",
-    tab: "open",
-    status: "Pending",
-    statusClass: "pending",
-    amount: "₱100.00",
-    paymentMethod: "Over-the-counter",
-    remarks: "Awaiting document verification.",
-  },
-  {
-    id: 4,
-    title: "Electronic Official Receipt Request",
-    reference: "LTMS-260505252424960-2026-004",
-    service: "Documents",
-    date: "April 24, 2026",
-    tab: "closed",
-    status: "Completed",
-    statusClass: "completed",
-    amount: "₱75.00",
-    paymentMethod: "Maya",
-    remarks: "Receipt has been generated successfully.",
-  },
-  {
-    id: 5,
-    title: "Traffic Violation Settlement",
-    reference: "LTMS-260505252424960-2026-005",
-    service: "Violations",
-    date: "April 15, 2026",
-    tab: "closed",
-    status: "Completed",
-    statusClass: "completed",
-    amount: "₱1,000.00",
-    paymentMethod: "GCash",
-    remarks: "Violation payment has been settled.",
-  },
-  {
-    id: 6,
-    title: "Duplicate Driver's License Request",
-    reference: "LTMS-260505252424960-2026-006",
-    service: "Licensing",
-    date: "March 30, 2026",
-    tab: "closed",
-    status: "Cancelled",
-    statusClass: "cancelled",
-    amount: "₱250.00",
-    paymentMethod: "Not paid",
-    remarks: "Request was cancelled by the client.",
+    plateNo: "DCA 9142",
+    mvFileNo: "1301-00000076421",
+    make: "Honda",
+    model: "Click 125i",
+    year: "2022",
+    classification: "Private Motorcycle",
+    engineNo: "JM31E876543",
+    chassisNo: "PHMC125202276421",
+    validUntil: "September 2026",
   },
 ]);
+
+const selectedVehicle = ref<Vehicle>(linkedVehicles.value[0]);
+
+const steps = [
+  { number: 1, label: "Vehicle" },
+  { number: 2, label: "Type" },
+  { number: 3, label: "Details" },
+  { number: 4, label: "Documents" },
+];
+
+const vehicleApplicationTypes = [
+  {
+    value: "renewal",
+    label: "Registration Renewal",
+    description: "Renew the existing vehicle registration validity.",
+  },
+  {
+    value: "duplicate_cr",
+    label: "Duplicate Certificate of Registration",
+    description: "Request replacement copy of registration record.",
+  },
+  {
+    value: "duplicate_or",
+    label: "Duplicate Official Receipt",
+    description: "Request replacement copy of payment receipt.",
+  },
+  {
+    value: "change_classification",
+    label: "Change Classification",
+    description: "Update vehicle use or registration classification.",
+  },
+  {
+    value: "transfer_ownership",
+    label: "Transfer of Ownership",
+    description: "Process ownership transfer for registered vehicle.",
+  },
+  {
+    value: "revision_records",
+    label: "Revision of Records",
+    description: "Correct or update motor vehicle registration details.",
+  },
+];
+
+const requiredDocuments = [
+  { value: "orcr", label: "Official Receipt / Certificate of Registration" },
+  { value: "insurance", label: "Certificate of Cover / Insurance" },
+  { value: "inspection", label: "Inspection Report" },
+];
+
+const uploadedDocuments = ref<Record<string, string>>({});
 
 const dashboardMenuItems = [
   {
     title: "DASHBOARD",
     route: "/home",
     description: "Return to main dashboard<br>overview and services",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M3 11l9-7 9 7" />
-        <path d="M5.5 10.5v9h13v-9" />
-        <path d="M9.5 19.5v-6h5v6" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7" /><path d="M5.5 10.5v9h13v-9" /><path d="M9.5 19.5v-6h5v6" /></svg>`,
   },
   {
     title: "LICENSING",
     route: "/licensing",
     description: "Apply, renew, manage<br>driver & student licenses",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <rect x="3.75" y="5.5" width="16.5" height="13" rx="2.4" />
-        <path d="M7.5 10h5.5" />
-        <path d="M7.5 13h3.7" />
-        <circle cx="16" cy="12" r="2.15" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><rect x="3.75" y="5.5" width="16.5" height="13" rx="2.4" /><path d="M7.5 10h5.5" /><path d="M7.5 13h3.7" /><circle cx="16" cy="12" r="2.15" /></svg>`,
   },
   {
     title: "VEHICLE",
     route: "/vehicle",
     description: "Check registrations<br>and manage vehicle records",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18" />
-        <path d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z" />
-        <circle cx="7.5" cy="15.8" r="1" fill="currentColor" stroke="none" />
-        <circle cx="16.5" cy="15.8" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M5.25 13.5l1.45-4.18A2.75 2.75 0 0 1 9.3 7.5h5.4a2.75 2.75 0 0 1 2.6 1.82l1.45 4.18" /><path d="M4.75 13.5h14.5A1.75 1.75 0 0 1 21 15.25v2.25a1.25 1.25 0 0 1-1.25 1.25H4.25A1.25 1.25 0 0 1 3 17.5v-2.25a1.75 1.75 0 0 1 1.75-1.75Z" /><circle cx="7.5" cy="15.8" r="1" fill="currentColor" stroke="none" /><circle cx="16.5" cy="15.8" r="1" fill="currentColor" stroke="none" /></svg>`,
   },
   {
     title: "TRANSACTIONS",
     route: "/transactions",
     description: "Track application<br>status and payment history",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z" />
-        <path d="M8.5 8h7" />
-        <path d="M8.5 11.5h7" />
-        <path d="M8.5 15h4.5" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25l-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4-2.35-1.4-2.35 1.4V6A2.25 2.25 0 0 1 7 3.75Z" /><path d="M8.5 8h7" /><path d="M8.5 11.5h7" /><path d="M8.5 15h4.5" /></svg>`,
   },
   {
     title: "VIOLATIONS",
     route: "/violations",
     description: "View and settle<br>traffic violations",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z" />
-        <path d="M12 8.5v5" />
-        <path d="M12 17h.01" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M12 3.75l8 3.5v5.8c0 4.65-3.25 7.75-8 9.2-4.75-1.45-8-4.55-8-9.2v-5.8l8-3.5Z" /><path d="M12 8.5v5" /><path d="M12 17h.01" /></svg>`,
   },
   {
     title: "DOCUMENTS",
     route: "/documents",
     description: "Request official copies<br>and electronic records",
-    icon: `
-      <svg viewBox="0 0 24 24">
-        <path d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z" />
-        <path d="M14.5 4.25v4h4" />
-        <path d="M8.5 12h7" />
-        <path d="M8.5 15.5h5" />
-      </svg>
-    `,
+    icon: `<svg viewBox="0 0 24 24"><path d="M7.5 4.25h7l4 4v11.5H7.5A2.5 2.5 0 0 1 5 17.25V6.75a2.5 2.5 0 0 1 2.5-2.5Z" /><path d="M14.5 4.25v4h4" /><path d="M8.5 12h7" /><path d="M8.5 15.5h5" /></svg>`,
   },
 ];
 
-const currentRoutePath = computed(() => router.currentRoute.value.path);
-const isRouteActive = (route: string) => currentRoutePath.value === route;
-
-const isDashboardSectionActive = computed(() =>
-  [
-    "/home",
-    "/licensing",
-    "/vehicle",
-    "/transactions",
-    "/violations",
-    "/documents",
-  ].includes(currentRoutePath.value),
-);
-
-const currentSectionLabel = computed(() => {
-  const item = dashboardMenuItems.find(
-    (menuItem) => menuItem.route === currentRoutePath.value,
+const selectedApplicationLabels = computed(() => {
+  return (
+    vehicleApplicationTypes.find(
+      (type) => type.value === selectedApplicationType.value,
+    )?.label || ""
   );
-  return item?.title || "TRANSACTIONS";
 });
 
-const breadcrumbItems = computed(() => [
-  { label: "Dashboard", route: "/home" },
-  { label: "Transactions", route: "/transactions" },
-]);
-
-const openTransactions = computed(() =>
-  transactions.value.filter((transaction) => transaction.tab === "open"),
+const uploadedDocumentCount = computed(
+  () => Object.values(uploadedDocuments.value).filter(Boolean).length,
 );
 
-const closedTransactions = computed(() =>
-  transactions.value.filter((transaction) => transaction.tab === "closed"),
-);
+const filteredVehicles = computed(() => {
+  const query = vehicleSearch.value.trim().toLowerCase();
 
-const pendingPaymentCount = computed(
-  () =>
-    transactions.value.filter(
-      (transaction) => transaction.status === "For Payment",
-    ).length,
-);
+  if (!query) return linkedVehicles.value;
 
-const filteredTransactions = computed(() => {
-  const normalizedSearch = searchTerm.value.toLowerCase();
-
-  return transactions.value.filter((transaction) => {
-    const matchesTab = transaction.tab === activeTab.value;
-    const matchesService =
-      serviceFilter.value === "all" ||
-      transaction.service === serviceFilter.value;
-    const matchesSearch =
-      !normalizedSearch ||
-      transaction.title.toLowerCase().includes(normalizedSearch) ||
-      transaction.reference.toLowerCase().includes(normalizedSearch) ||
-      transaction.status.toLowerCase().includes(normalizedSearch) ||
-      transaction.service.toLowerCase().includes(normalizedSearch) ||
-      transaction.amount.toLowerCase().includes(normalizedSearch);
-
-    return matchesTab && matchesService && matchesSearch;
+  return linkedVehicles.value.filter((vehicle) => {
+    return [
+      vehicle.plateNo,
+      vehicle.mvFileNo,
+      vehicle.make,
+      vehicle.model,
+      vehicle.classification,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
   });
 });
 
-const setTab = (tab: "open" | "closed") => {
-  activeTab.value = tab;
-};
-
-const openTransactionDetails = (transaction: TransactionRecord) => {
-  selectedTransaction.value = transaction;
-};
-
-const closeTransactionDetails = () => {
-  selectedTransaction.value = null;
-};
+const referenceNumber = computed(() => {
+  return `LTO-MV-${selectedVehicle.value.plateNo.replaceAll(" ", "")}-${new Date().getFullYear()}`;
+});
 
 const delay = (ms: number) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const beginPageLoading = async () => {
   if (isPageLoading.value) return false;
-
   isPageLoading.value = true;
-  showUserMenu.value = false;
-  showDashboardMenu.value = false;
+  closeFloatingMenus();
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   await nextTick();
   await delay(220);
@@ -845,9 +1089,33 @@ const navigateTo = async (route: string) => {
   }
 };
 
+const currentRoutePath = computed(() => router.currentRoute.value.path);
+const isRouteActive = (route: string) => currentRoutePath.value === route;
+const isDashboardSectionActive = computed(() =>
+  [
+    "/home",
+    "/licensing",
+    "/vehicle",
+    "/transactions",
+    "/violations",
+    "/documents",
+  ].includes(currentRoutePath.value),
+);
+const currentSectionLabel = computed(() => {
+  const item = dashboardMenuItems.find(
+    (menuItem) => menuItem.route === currentRoutePath.value,
+  );
+  return item?.title || "DASHBOARD";
+});
+const breadcrumbItems = computed(() => [
+  { label: "Dashboard", route: "/home" },
+  { label: currentSectionLabel.value, route: currentRoutePath.value },
+]);
+
 const goToDashboard = () => navigateTo("/home");
 const goToELearning = () => navigateTo("/e-learning");
 const goToProfile = () => navigateTo("/profile");
+const goToDashboardItem = (route: string) => navigateTo(route);
 
 const goToContact = async () => {
   const started = await beginPageLoading();
@@ -866,8 +1134,87 @@ const openOfficialWebsite = async () => {
   endPageLoading();
 };
 
-const goToDashboardItem = (route: string) => {
-  navigateTo(route);
+const selectApplicationType = (value: string) => {
+  validationMessage.value = "";
+  selectedApplicationType.value = value;
+};
+
+const selectVehicle = (vehicle: Vehicle) => {
+  selectedVehicle.value = vehicle;
+  showVehiclePicker.value = false;
+};
+
+const handleDocumentUpload = (event: Event, key: string) => {
+  const input = event.target as HTMLInputElement;
+  uploadedDocuments.value = {
+    ...uploadedDocuments.value,
+    [key]: input.files?.[0]?.name || "",
+  };
+};
+
+const handleProceed = () => {
+  validationMessage.value = "";
+
+  if (currentStep.value === 1) {
+    currentStep.value = 2;
+    return;
+  }
+
+  if (currentStep.value === 2) {
+    if (!selectedApplicationType.value) {
+      validationMessage.value =
+        "Please select one vehicle application type before proceeding.";
+      return;
+    }
+
+    currentStep.value = 3;
+    return;
+  }
+
+  if (currentStep.value === 3) {
+    currentStep.value = 4;
+    return;
+  }
+
+  if (currentStep.value === 4) {
+    if (!isConfirmed.value) {
+      validationMessage.value =
+        "Please confirm that you have reviewed the vehicle application details.";
+      return;
+    }
+
+    showSubmitConfirm.value = true;
+  }
+};
+
+const handleBack = () => {
+  validationMessage.value = "";
+
+  if (currentStep.value > 1) {
+    currentStep.value -= 1;
+  }
+};
+
+const closeConfirmDialogs = () => {
+  showCancelConfirm.value = false;
+  showSubmitConfirm.value = false;
+};
+
+const confirmCancel = async () => {
+  closeConfirmDialogs();
+  await navigateTo("/home");
+};
+
+const confirmSubmit = () => {
+  closeConfirmDialogs();
+  showSuccessModal.value = true;
+};
+
+const toggleMobileNav = () => {
+  if (isPageLoading.value) return;
+  showMobileNav.value = !showMobileNav.value;
+  showUserMenu.value = false;
+  showDashboardMenu.value = false;
 };
 
 const toggleDashboardMenu = () => {
@@ -883,6 +1230,7 @@ const toggleUserMenu = () => {
 };
 
 const closeFloatingMenus = () => {
+  showMobileNav.value = false;
   showUserMenu.value = false;
   showDashboardMenu.value = false;
 };
@@ -921,7 +1269,6 @@ const cancelLogout = () => {
 
 const logoutUser = async () => {
   showLogoutModal.value = false;
-
   const started = await beginPageLoading();
   if (!started) return;
 
@@ -1022,17 +1369,18 @@ watch(
   }
 }
 
+/* TOPBAR */
+
 .topbar {
   min-height: 72px;
-  height: auto;
   background: linear-gradient(180deg, #0d468f 0%, #0b3d82 100%);
-  color: #ffffff;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
   box-shadow: 0 8px 18px rgba(10, 46, 99, 0.18);
-  z-index: 5;
+  z-index: 20;
 }
 
 .topbar-left {
@@ -1051,16 +1399,6 @@ watch(
   cursor: pointer;
 }
 
-.brand-logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
 .brand-copy {
   display: flex;
   flex-direction: column;
@@ -1072,20 +1410,53 @@ watch(
   font-weight: 800;
   letter-spacing: 0.12em;
   opacity: 0.88;
-  color: #ffffff;
+  color: #fff;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .brand-text {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.3px;
-  color: #ffffff;
+  color: #fff;
 }
 
 .topbar-nav {
   display: flex;
-  gap: 22px;
   align-items: center;
+  gap: 22px;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle span {
+  display: block;
+  width: 21px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .nav-item {
@@ -1108,7 +1479,6 @@ watch(
 }
 
 .nav-item:hover {
-  opacity: 1;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.14);
@@ -1151,10 +1521,6 @@ watch(
   cursor: pointer;
 }
 
-.dashboard-trigger.active .dashboard-caret {
-  transform: rotate(180deg);
-}
-
 .dashboard-caret {
   width: 14px;
   height: 14px;
@@ -1164,703 +1530,6 @@ watch(
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.9;
-  transition: transform 0.22s ease;
-}
-
-.user-menu {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  z-index: 90 !important;
-}
-
-.user-menu-trigger {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-height: 42px !important;
-  padding: 6px 10px !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #fff !important;
-  cursor: pointer !important;
-}
-
-.user-avatar {
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 50% !important;
-  display: grid !important;
-  place-items: center !important;
-  background: rgba(255, 255, 255, 0.18) !important;
-  color: #fff !important;
-  font-size: 13px !important;
-  font-weight: 800 !important;
-  flex: 0 0 30px !important;
-}
-
-.user-info {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  line-height: 1.15 !important;
-}
-
-.user-name {
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.04em !important;
-  color: #ffffff !important;
-}
-
-.user-id {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  opacity: 0.84 !important;
-  white-space: nowrap !important;
-  color: #ffffff !important;
-}
-
-.user-caret {
-  width: 14px !important;
-  height: 14px !important;
-  opacity: 0.86 !important;
-  color: #ffffff !important;
-}
-
-.user-dropdown {
-  position: absolute !important;
-  top: calc(100% + 10px) !important;
-  right: 0 !important;
-  min-width: 180px !important;
-  padding: 8px !important;
-  border-radius: 16px !important;
-  background: #ffffff !important;
-  border: 1px solid #dbe5f3 !important;
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16) !important;
-  z-index: 1400 !important;
-  color: #1f2937 !important;
-  display: block !important;
-}
-
-.user-dropdown-item {
-  width: 100% !important;
-  border: none !important;
-  background: transparent !important;
-  color: #1f2937 !important;
-  text-align: left !important;
-  border-radius: 10px !important;
-  padding: 11px 12px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-}
-
-.user-dropdown-item:hover {
-  background: #f4f8ff !important;
-  color: #154b96 !important;
-}
-
-.user-dropdown-item.danger:hover {
-  background: #fff1f2 !important;
-  color: #be123c !important;
-}
-
-.hero {
-  flex: 1;
-  position: relative;
-  background:
-    linear-gradient(rgba(244, 247, 251, 0.76), rgba(244, 247, 251, 0.88)),
-    url("../assets/BGC.jpg") center/cover no-repeat;
-  display: flex;
-  flex-direction: column !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
-  gap: 0 !important;
-  padding: 42px 24px 30px;
-  overflow-x: hidden !important;
-  overflow-y: auto;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(29, 78, 216, 0.13),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(15, 61, 135, 0.1),
-      transparent 38%
-    );
-  pointer-events: none;
-}
-
-.seal-watermark {
-  position: absolute;
-  left: 34px;
-  top: 34px;
-  width: 320px;
-  opacity: 0.055;
-  pointer-events: none;
-}
-
-.seal-watermark img {
-  width: 100%;
-  display: block;
-  filter: grayscale(100%);
-}
-
-.breadcrumb-bar {
-  position: relative;
-  z-index: 2;
-  width: min(95%, 1120px) !important;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 14px;
-  padding: 0 4px;
-  flex: 0 0 auto !important;
-  align-self: center !important;
-}
-
-.breadcrumb-item {
-  border: none;
-  background: transparent;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 4px;
-}
-
-.breadcrumb-item:not(.current):hover {
-  color: #0f3d87;
-  text-decoration: underline;
-}
-
-.breadcrumb-item.current {
-  color: #0f3d87;
-  cursor: default;
-}
-
-.breadcrumb-separator {
-  color: #94a3b8;
-  font-weight: 900;
-}
-
-.transactions-modal {
-  position: relative;
-  z-index: 2;
-  width: min(95%, 1120px) !important;
-  max-width: 1120px;
-  flex: 0 0 auto !important;
-  align-self: center !important;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 24px;
-  box-shadow:
-    0 28px 70px rgba(15, 23, 42, 0.18),
-    0 10px 24px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  padding: 0;
-  overflow: hidden;
-}
-
-.modal-top-strip {
-  height: 7px;
-  background: linear-gradient(90deg, #0a3779 0%, #1d4ed8 52%, #93c5fd 100%);
-}
-
-.transaction-header {
-  min-height: 84px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 22px 32px;
-}
-
-.transaction-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.transaction-title-icon {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 15px;
-  color: #0f3d87;
-  background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
-  padding: 11px;
-}
-
-.transaction-title-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.transaction-header h1 {
-  margin: 0;
-  color: #0b1220;
-  font-size: 25px;
-  font-weight: 900;
-  letter-spacing: -0.35px;
-}
-
-.transaction-header p {
-  margin: 6px 0 0;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.client-pill {
-  min-width: 210px;
-  border: 1px solid #dbeafe;
-  background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
-  border-radius: 16px;
-  padding: 16px 18px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-}
-
-.client-pill span {
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 0.45px;
-  text-transform: uppercase;
-}
-
-.client-pill strong {
-  color: #0f172a;
-  font-size: 15px;
-  line-height: 1.25;
-  font-weight: 900;
-}
-
-.transaction-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  padding: 22px 32px 0;
-}
-
-.summary-tile {
-  min-height: 118px;
-  border: 1px solid #dbe3ee;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  padding: 18px;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
-}
-
-.summary-tile span {
-  display: block;
-  color: #475569;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.summary-tile strong {
-  display: block;
-  margin-top: 8px;
-  color: #0f172a;
-  font-size: 30px;
-  line-height: 1;
-  font-weight: 950;
-}
-
-.summary-tile small {
-  display: block;
-  margin-top: 9px;
-  color: #64748b;
-  font-size: 12.5px;
-  line-height: 1.4;
-  font-weight: 650;
-}
-
-.summary-tile.blue {
-  border-color: #bfdbfe;
-  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
-}
-
-.summary-tile.blue strong {
-  color: #0645ad;
-}
-
-.summary-tile.green {
-  border-color: #bbf7d0;
-  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
-}
-
-.summary-tile.green strong {
-  color: #047857;
-}
-
-.summary-tile.amber {
-  border-color: #fde68a;
-  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
-}
-
-.summary-tile.amber strong {
-  color: #b45309;
-}
-
-.transaction-tabs {
-  display: flex;
-  align-items: center;
-  padding: 28px 32px 0;
-}
-
-.transaction-tabs button {
-  min-width: 95px;
-  min-height: 44px;
-  border: 1px solid #d6d6d6;
-  background: #fafafa;
-  color: #333;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.transaction-tabs button.active {
-  background: #0645ad;
-  border-color: #0645ad;
-  color: #ffffff;
-  font-weight: 800;
-}
-
-.transaction-toolbar {
-  display: grid;
-  grid-template-columns: 1fr 210px;
-  gap: 12px;
-  padding: 16px 32px 0;
-}
-
-.search-field {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid #dbe3ee;
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 0 14px;
-}
-
-.search-field svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: #64748b;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.search-field input {
-  width: 100%;
-  border: none;
-  outline: none;
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 650;
-}
-
-.search-field input::placeholder {
-  color: #94a3b8;
-}
-
-.filter-select {
-  min-height: 44px;
-  border: 1px solid #dbe3ee;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #0f172a;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 800;
-  outline: none;
-}
-
-.transaction-content {
-  min-height: 260px;
-  padding: 22px 32px 28px;
-  display: grid;
-  place-items: center;
-}
-
-.empty-state {
-  text-align: center;
-  color: #444;
-  transform: translateY(-2px);
-}
-
-.empty-state p {
-  margin: 14px 0 0;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.empty-icon {
-  width: 40px;
-  height: 40px;
-  margin: 0 auto;
-  border: 3px solid #cfcfcf;
-  border-radius: 50%;
-  position: relative;
-}
-
-.empty-icon::after {
-  content: "";
-  position: absolute;
-  width: 28px;
-  height: 3px;
-  background: #cfcfcf;
-  right: -23px;
-  bottom: -9px;
-  transform: rotate(45deg);
-  transform-origin: left center;
-}
-
-.transaction-list {
-  width: 100%;
-  display: grid;
-  gap: 12px;
-}
-
-.transaction-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 52px 1fr auto;
-  gap: 14px;
-  align-items: center;
-  border: 1px solid #dbe3ee;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  padding: 15px;
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.transaction-row:hover {
-  transform: translateY(-1px);
-  border-color: #93c5fd;
-  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.08);
-}
-
-.transaction-row-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: #ffffff;
-  background: linear-gradient(135deg, #2563eb 0%, #0f3d87 100%);
-  padding: 12px;
-}
-
-.transaction-row-icon svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.transaction-row-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.transaction-row-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.transaction-row-copy strong {
-  color: #0f172a;
-  font-size: 15px;
-  line-height: 1.2;
-  font-weight: 950;
-}
-
-.transaction-row-copy span,
-.transaction-row-copy small {
-  color: #64748b;
-  font-size: 12.5px;
-  font-weight: 650;
-}
-
-.status-chip {
-  display: inline-flex !important;
-  align-items: center;
-  min-height: 22px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 11px !important;
-  line-height: 1 !important;
-  font-weight: 900 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.status-chip.pending {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.status-chip.for-payment {
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.status-chip.processing {
-  background: #f0f9ff;
-  color: #0369a1;
-}
-
-.status-chip.completed {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.status-chip.cancelled {
-  background: #fef2f2;
-  color: #b42318;
-}
-
-.transaction-row-actions button {
-  min-height: 38px;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
-  background: #eff6ff;
-  color: #0f3d87;
-  padding: 0 14px;
-  font-size: 12px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.transaction-row-actions button:hover {
-  background: #dbeafe;
-}
-
-.transaction-footer {
-  min-height: 91px;
-  border-top: 1px solid #e1e1e1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 25px;
-}
-
-.transaction-footer span {
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.btn-back {
-  width: 72px;
-  height: 37px;
-  border: 1px solid #d5d5d5;
-  background: #fafafa;
-  color: #444;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.btn-back svg {
-  width: 28px;
-  height: 28px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.btn-back:hover {
-  background: #f1f5f9;
-}
-
-.footer {
-  height: 62px;
-  background: #0a3779;
-  color: #ffffff;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 0 20px;
-  font-size: 12px;
-}
-
-.footer-left {
-  justify-self: start;
-  font-weight: 700;
-}
-
-.footer-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-
-.footer-logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
-
-.footer-right {
-  justify-self: end;
-  font-size: 18px;
-  opacity: 0.75;
 }
 
 .mega-dropdown {
@@ -1868,7 +1537,7 @@ watch(
   top: calc(100% + 16px);
   right: 0;
   width: min(760px, 92vw);
-  max-width: calc(100vw - 32px) !important;
+  max-width: calc(100vw - 32px);
   padding: 18px;
   border-radius: 26px;
   background: linear-gradient(
@@ -1898,10 +1567,6 @@ watch(
 }
 
 .mega-dropdown-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
   padding: 8px 8px 16px;
   border-bottom: 1px solid #e5edf7;
   margin-bottom: 14px;
@@ -1992,41 +1657,27 @@ watch(
   border-radius: 20px;
   display: grid;
   place-items: center;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #2563eb 0%, #0f3d87 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb 0%, #0f3d87 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
     0 14px 26px rgba(29, 78, 216, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    filter 0.25s ease;
 }
 
 .mega-item:first-child .mega-icon {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #64748b 0%, #1e293b 100%) !important;
+  background: linear-gradient(135deg, #64748b, #1e293b);
 }
 
-.mega-item:hover .mega-icon,
-.mega-item.active .mega-icon {
-  transform: scale(1.08) rotate(-2deg);
-  filter: saturate(1.12);
-  box-shadow:
-    0 18px 34px rgba(29, 78, 216, 0.42),
-    0 0 0 5px rgba(29, 78, 216, 0.12);
-  animation: premiumIconPulse 1.4s ease-in-out infinite;
-}
-
-@keyframes premiumIconPulse {
-  0%,
-  100% {
-    transform: scale(1.08) rotate(-2deg);
-  }
-  50% {
-    transform: scale(1.13) rotate(-2deg);
-  }
+:deep(.mega-icon svg) {
+  width: 27px;
+  height: 27px;
+  display: block;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .mega-copy {
@@ -2058,10 +1709,6 @@ watch(
   place-items: center;
   color: #94a3b8;
   background: #f8fafc;
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
 }
 
 .mega-arrow svg {
@@ -2072,13 +1719,6 @@ watch(
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.mega-item:hover .mega-arrow,
-.mega-item.active .mega-arrow {
-  color: #1d4ed8;
-  background: #dbeafe;
-  transform: translateX(3px);
 }
 
 .mega-footer {
@@ -2108,114 +1748,1175 @@ watch(
   cursor: pointer;
 }
 
-.mega-footer button:hover {
-  text-decoration: underline;
-}
+/* User menu */
 
-.details-overlay,
-.logout-modal-overlay,
-.settings-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1300;
+.user-menu {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(8px);
+  justify-content: flex-end;
+  z-index: 90;
 }
 
-.details-card,
-.logout-modal-card,
-.settings-modal-card {
-  width: min(560px, 100%);
-  border-radius: 24px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  border: 1px solid #dbe5f3;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
-}
-
-.details-card {
-  overflow: hidden;
-}
-
-.details-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px;
-  border-bottom: 1px solid #e5edf7;
-}
-
-.details-kicker,
-.logout-modal-kicker,
-.settings-modal-kicker {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: #1f5fb7;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.details-header h2 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 24px;
-  line-height: 1.15;
-}
-
-.details-close,
-.settings-close-btn {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #d8e2ef;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #154b96;
-  font-size: 22px;
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   cursor: pointer;
 }
 
-.details-body {
-  padding: 22px 24px 24px;
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   display: grid;
-  gap: 12px;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  flex: 0 0 30px;
 }
 
-.details-row {
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.user-id {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.84;
+  white-space: nowrap;
+}
+
+.user-caret {
+  width: 14px;
+  height: 14px;
+  opacity: 0.86;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #dbe5f3;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
+  z-index: 1400;
+}
+
+.user-dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  text-align: left;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.user-dropdown-item:hover {
+  background: #f4f8ff;
+  color: #154b96;
+}
+
+.user-dropdown-item.danger:hover {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+/* Background */
+
+.hero {
+  flex: 1;
+  position: relative;
+  background:
+    linear-gradient(rgba(244, 247, 251, 0.68), rgba(244, 247, 251, 0.82)),
+    url("../assets/BGC.jpg") center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 42px 24px 30px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(29, 78, 216, 0.13),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(15, 61, 135, 0.1),
+      transparent 38%
+    );
+  pointer-events: none;
+}
+
+.seal-watermark {
+  position: absolute;
+  left: 34px;
+  top: 34px;
+  width: 320px;
+  opacity: 0.055;
+  pointer-events: none;
+}
+
+.seal-watermark img {
+  width: 100%;
+  display: block;
+  filter: grayscale(100%);
+}
+
+.breadcrumb-bar {
+  position: relative;
+  z-index: 2;
+  width: min(95%, 1120px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0 4px;
+}
+
+.breadcrumb-item {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+}
+
+.breadcrumb-item.current {
+  color: #0f3d87;
+  cursor: default;
+}
+
+.breadcrumb-separator {
+  color: #94a3b8;
+  font-weight: 900;
+}
+
+/* Modal */
+
+.vehicle-modal {
+  position: relative;
+  z-index: 2;
+  width: min(95%, 1120px);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 24px;
+  box-shadow:
+    0 28px 70px rgba(15, 23, 42, 0.18),
+    0 10px 24px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: 0 34px 26px;
+  overflow: hidden;
+}
+
+.modal-top-strip {
+  height: 7px;
+  margin: 0 -34px;
+  background: linear-gradient(90deg, #0a3779 0%, #1d4ed8 52%, #93c5fd 100%);
+}
+
+.progress-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 22px 0 0;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #64748b;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.progress-step.active {
+  color: #0f3d87;
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.progress-step.complete {
+  color: #047857;
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+}
+
+.progress-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.progress-step.active .progress-number {
+  color: #ffffff;
+  background: #1d4ed8;
+}
+
+.progress-step.complete .progress-number {
+  color: #ffffff;
+  background: #047857;
+}
+
+.progress-number svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.modal-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 28px;
+  align-items: start;
+  padding: 28px 0 22px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.agency-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #0f3d87;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.48px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.kicker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1d4ed8;
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.12);
+}
+
+.modal-hero h1 {
+  margin: 0;
+  max-width: 760px;
+  font-size: 29px;
+  line-height: 1.16;
+  font-weight: 900;
+  letter-spacing: -0.55px;
+  color: #0b1220;
+}
+
+.client-id {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: #334155;
+  font-weight: 750;
+}
+
+.client-id span {
+  color: #94a3b8;
+  margin: 0 7px;
+}
+
+.instruction {
+  margin: 11px 0 0;
+  font-size: 15px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.step-card {
+  min-width: 210px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.step-card.compact {
+  min-width: 190px;
+}
+
+.step-card span {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.step-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+/* Vehicle step */
+
+.vehicle-select-panel {
+  max-width: 620px;
+  margin: 34px auto 26px;
+}
+
+.field-label {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  margin-bottom: 9px;
+}
+
+.vehicle-dropdown-trigger {
+  width: 100%;
+  min-height: 70px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 13px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border: 1px solid #e5edf7;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
 }
 
-.details-row span {
+.vehicle-dropdown-trigger svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #0f3d87;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vehicle-trigger-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vehicle-trigger-copy span {
   color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.vehicle-trigger-copy strong {
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.vehicle-trigger-copy small {
+  color: #0f3d87;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.vehicle-card {
+  margin-top: 18px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.vehicle-card-icon,
+.vehicle-result-icon,
+.form-title-icon,
+.confirmation-icon,
+.upload-card-icon,
+.confirm-dialog-icon,
+.success-icon {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(145deg, #2563eb 0%, #0f3d87 100%);
+}
+
+.vehicle-card-icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border-radius: 20px;
+  box-shadow: 0 14px 26px rgba(29, 78, 216, 0.26);
+}
+
+.vehicle-card-icon svg,
+.vehicle-result-icon svg,
+.form-title-icon svg,
+.confirmation-icon svg,
+.upload-card-icon svg,
+.confirm-dialog-icon svg,
+.success-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vehicle-card-icon circle,
+.vehicle-card-icon path[fill="currentColor"] {
+  fill: currentColor;
+  stroke: none;
+}
+
+.vehicle-card-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.vehicle-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.vehicle-card-copy strong {
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 950;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.vehicle-card-copy p {
+  margin: 0 0 5px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.vehicle-card-copy small {
+  color: #0f3d87;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Forms */
+
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 0 22px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.form-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.form-title-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 15px;
+  padding: 11px;
+}
+
+.form-title-icon.amber {
+  background: linear-gradient(145deg, #f59e0b 0%, #b45309 100%);
+}
+
+.form-title h1 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.15;
+  font-weight: 900;
+  color: #0b1220;
+  letter-spacing: -0.35px;
+}
+
+.form-title p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.notice-card {
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  color: #0f3d87;
+  border-radius: 14px;
+  padding: 15px 18px;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: center;
+  margin: 22px 0;
+}
+
+.application-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.application-type {
+  position: relative;
+  min-height: 86px;
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 15px 16px 15px 52px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.application-type:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08);
+}
+
+.application-type.selected {
+  border-color: #1d4ed8;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow:
+    0 0 0 4px rgba(29, 78, 216, 0.08),
+    0 12px 24px rgba(29, 78, 216, 0.12);
+}
+
+.application-check {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #cbd5e1;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #ffffff;
+}
+
+.application-type.selected .application-check {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.application-check svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.application-type-label {
+  display: block;
+  color: #0f3d87;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.application-type strong {
+  display: block;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Details and docs */
+
+.details-grid,
+.review-summary {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.detail-card,
+.summary-card {
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 18px;
+}
+
+.detail-card span,
+.summary-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  margin-bottom: 8px;
+}
+
+.detail-card strong,
+.summary-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.document-section {
+  margin-top: 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  padding: 20px;
+}
+
+.document-section h2 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 950;
+}
+
+.document-section p {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.upload-card {
+  min-height: 104px;
+  border: 1px dashed #93c5fd;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.upload-card-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 14px;
+}
+
+.upload-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.upload-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.upload-card-copy strong {
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 900;
+}
+
+.upload-card-copy small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Review */
+
+.review-panel {
+  padding-top: 0;
+}
+
+.confirmation-box {
+  margin-top: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid #fde68a;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+  padding: 18px;
+}
+
+.confirmation-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #f59e0b 0%, #b45309 100%);
+  padding: 11px;
+}
+
+.confirmation-box h2 {
+  margin: 0;
+  color: #78350f;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.confirmation-box p {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.declaration-check {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.declaration-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #1d4ed8;
+}
+
+/* Actions */
+
+.validation-message {
+  margin-top: 18px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.modal-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.btn-back,
+.btn-cancel,
+.btn-proceed {
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 0 26px;
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.btn-back {
+  background: #ffffff;
+  color: #0f3d87;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-back:hover {
+  background: #eff6ff;
+}
+
+.btn-cancel {
+  background: #ffffff;
+  color: #b42318;
+  border: 1px solid #fecaca;
+}
+
+.btn-cancel:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.btn-proceed {
+  border: none;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  margin-left: auto;
+  box-shadow: 0 12px 22px rgba(29, 78, 216, 0.24);
+}
+
+.btn-proceed:hover {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.btn-back:hover,
+.btn-cancel:hover,
+.btn-proceed:hover {
+  transform: translateY(-1px);
+}
+
+/* Dialogs */
+
+.dialog-overlay,
+.confirm-overlay,
+.settings-modal-overlay,
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.vehicle-picker-dialog,
+.confirm-dialog,
+.success-dialog,
+.settings-modal-card,
+.logout-modal-card {
+  width: min(100%, 560px);
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
+  padding: 26px;
+}
+
+.vehicle-picker-dialog {
+  width: min(100%, 620px);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dialog-kicker {
+  display: inline-block;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 23px;
+  font-weight: 950;
+}
+
+.dialog-close {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #dbe5f3;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0f3d87;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.search-row input {
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.search-row button {
+  border: none;
+  border-radius: 12px;
+  background: #1d4ed8;
+  color: #ffffff;
+  padding: 0 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vehicle-result {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vehicle-result + .vehicle-result {
+  margin-top: 10px;
+}
+
+.vehicle-result:hover {
+  background: #f4f8ff;
+}
+
+.vehicle-result-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 15px;
+}
+
+.vehicle-result-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vehicle-result-copy strong {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.vehicle-result-copy small {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.confirm-dialog,
+.success-dialog,
+.logout-modal-card {
+  width: min(100%, 460px);
+  text-align: center;
+}
+
+.confirm-dialog-icon,
+.success-icon {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  padding: 15px;
+}
+
+.confirm-dialog-icon.danger {
+  color: #b42318;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.confirm-dialog-icon.submit,
+.success-icon {
+  color: #ffffff;
+  background: linear-gradient(145deg, #10b981 0%, #047857 100%);
+  border: none;
+}
+
+.confirm-dialog h2,
+.success-dialog h2,
+.logout-modal-copy h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.confirm-dialog p,
+.success-dialog p,
+.logout-modal-copy p {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.confirm-actions,
+.logout-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.btn-dialog-secondary,
+.btn-dialog-primary,
+.logout-cancel-btn,
+.logout-confirm-btn,
+.settings-done-btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.btn-dialog-secondary,
+.logout-cancel-btn {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-dialog-primary {
+  border: none;
+  background: #047857;
+  color: #ffffff;
+}
+
+.btn-dialog-primary.danger,
+.logout-confirm-btn {
+  border: none;
+  background: #b42318;
+  color: #ffffff;
+}
+
+.reference-card {
+  margin: 18px 0;
+  border: 1px solid #bbf7d0;
+  background: #ecfdf5;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.reference-card span {
+  display: block;
+  color: #047857;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
 }
 
-.details-row strong {
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 900;
-  text-align: right;
+.reference-card strong {
+  color: #064e3b;
+  font-size: 18px;
+  font-weight: 950;
 }
 
-.logout-modal-card {
-  width: min(420px, 100%);
-  padding: 24px;
-  text-align: center;
+.success-btn {
+  width: 100%;
+  margin-left: 0;
 }
 
 .logout-modal-icon-wrap {
@@ -2236,52 +2937,22 @@ watch(
   font-weight: 800;
 }
 
-.logout-modal-copy h3 {
-  margin: 0 0 10px;
-  color: #1f2937;
-  font-size: 24px;
-  line-height: 1.15;
-}
-
-.logout-modal-copy p {
-  margin: 0;
-  color: #64748b;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.logout-modal-actions,
-.settings-modal-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.logout-cancel-btn,
-.logout-confirm-btn,
-.settings-done-btn {
-  flex: 1;
-  min-height: 46px;
-  border-radius: 14px;
-  font-size: 14px;
+.logout-modal-kicker,
+.settings-modal-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #1f5fb7;
+  font-size: 11px;
   font-weight: 800;
-  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.logout-cancel-btn {
-  border: 1px solid #d8e2ef;
-  background: #ffffff;
-  color: #154b96;
-}
-
-.logout-confirm-btn {
-  border: none;
-  background: linear-gradient(180deg, #d92d20 0%, #b42318 100%);
-  color: #ffffff;
-  box-shadow: 0 12px 22px rgba(180, 35, 24, 0.18);
-}
+/* Settings */
 
 .settings-modal-card {
+  width: min(560px, 100%);
+  padding: 0;
   overflow: hidden;
 }
 
@@ -2299,6 +2970,17 @@ watch(
   color: #1f2937;
   font-size: 28px;
   line-height: 1.1;
+}
+
+.settings-close-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d8e2ef;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #154b96;
+  font-size: 22px;
+  cursor: pointer;
 }
 
 .settings-modal-body {
@@ -2338,7 +3020,6 @@ watch(
 
 .settings-modal-actions {
   padding: 0 24px 24px;
-  margin-top: 0;
 }
 
 .settings-done-btn {
@@ -2393,23 +3074,45 @@ watch(
   transform: translateX(24px);
 }
 
-:deep(.mega-icon svg),
-:deep(.transaction-title-icon svg),
-:deep(.transaction-row-icon svg) {
-  fill: none !important;
-  stroke: currentColor !important;
-  color: inherit !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
+/* Footer */
+
+.footer {
+  height: 62px;
+  background: #0a3779;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 12px;
 }
 
-:deep(.mega-icon svg circle[fill="currentColor"]),
-:deep(.mega-icon svg path[fill="currentColor"]) {
-  fill: currentColor !important;
-  stroke: none !important;
+.footer-left {
+  justify-self: start;
+  font-weight: 600;
 }
 
-@media (max-width: 1000px) {
+.footer-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.footer-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.footer-right {
+  justify-self: end;
+  font-size: 22px;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
   .topbar {
     height: auto;
     flex-direction: column;
@@ -2422,39 +3125,276 @@ watch(
     justify-content: center;
   }
 
-  .transaction-summary-grid {
+  .modal-hero,
+  .form-header {
     grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
   }
-}
 
-@media (max-width: 900px) {
+  .step-card {
+    width: 100%;
+  }
+
+  .details-grid,
+  .review-summary,
+  .document-upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .mega-dropdown {
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
+    right: 50%;
+    transform: translateX(50%);
     width: min(94vw, 760px);
   }
 
   .mega-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .mega-dropdown-head {
+@media (max-width: 760px) {
+  .hero {
+    padding: 26px 14px 24px;
+  }
+
+  .seal-watermark {
+    width: 220px;
+    left: 10px;
+    top: 70px;
+  }
+
+  .vehicle-modal {
+    width: min(96%, 760px);
+    padding: 0 18px 18px;
+    border-radius: 18px;
+  }
+
+  .modal-top-strip {
+    margin: 0 -18px;
+  }
+
+  .progress-track,
+  .application-type-grid,
+  .details-grid,
+  .review-summary,
+  .document-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-hero h1,
+  .form-title h1 {
+    font-size: 22px;
+  }
+
+  .vehicle-card,
+  .confirmation-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-actions,
+  .confirm-actions,
+  .logout-modal-actions {
     flex-direction: column;
   }
 
+  .btn-back,
+  .btn-cancel,
+  .btn-proceed,
+  .btn-dialog-secondary,
+  .btn-dialog-primary,
+  .logout-cancel-btn,
+  .logout-confirm-btn {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .mega-dropdown {
+    position: fixed;
+    top: 154px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100vh - 176px);
+    overflow-y: auto;
+    transform: none;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .settings-option-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .switch {
+    align-self: flex-end;
+  }
+
+  .footer {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    justify-self: center;
+  }
+}
+
+/* SINGLE-SELECTION VEHICLE TYPE FIX */
+
+.application-radio {
+  border-radius: 50% !important;
+}
+
+.application-type.selected .application-radio {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.12);
+}
+
+.application-radio svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Licensing mobile topbar/submenu consistency override */
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto;
+    min-height: 64px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+    position: relative;
+    z-index: 80;
+  }
+
+  .topbar-left {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
   .user-menu-trigger {
-    width: 100% !important;
-    justify-content: center !important;
+    width: auto;
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .user-id {
+    display: none;
+  }
+
+  .topbar-nav {
+    order: 4;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(5, 36, 82, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: visible;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .dashboard-menu {
+    width: 100%;
+  }
+
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+    border-radius: 18px;
+    transform: none;
+    z-index: 1001;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .modal-hero,
+  .form-header,
+  .dynamic-header,
+  .dynamic-grid,
+  .review-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .step-card,
+  .fee-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .mega-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+    transform: none;
+    border-radius: 18px;
+  }
+
+  .mega-dropdown::before {
+    display: none;
+  }
+
+  .mega-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    justify-content: center;
   }
 
   .user-dropdown {
-    right: 50% !important;
-    transform: translateX(50%) !important;
-  }
-
-  .transaction-toolbar {
-    grid-template-columns: 1fr;
+    right: 0;
+    transform: none;
   }
 }
 
@@ -2465,57 +3405,87 @@ watch(
     top: 70px;
   }
 
-  .transactions-modal {
-    width: min(96%, 760px) !important;
+  .licensing-modal {
+    width: min(96%, 760px);
+    padding: 0 18px 18px;
     border-radius: 18px;
   }
 
-  .transaction-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .modal-top-strip {
+    margin: 0 -18px;
   }
 
-  .client-pill {
-    width: 100%;
+  .progress-track,
+  .review-summary,
+  .success-summary,
+  .application-type-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
-  .transaction-summary-grid,
-  .transaction-tabs,
-  .transaction-toolbar,
-  .transaction-content {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-
-  .transaction-row {
-    grid-template-columns: 52px 1fr;
-  }
-
-  .transaction-row-actions {
-    grid-column: 1 / -1;
-  }
-
-  .transaction-row-actions button {
-    width: 100%;
-  }
-
-  .details-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .details-row strong {
+  .form-grid label {
     text-align: left;
+  }
+
+  .modal-actions,
+  .confirm-actions,
+  .logout-modal-actions,
+  .settings-modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-back,
+  .btn-cancel,
+  .btn-proceed {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .upload-option,
+  .confirmation-box {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .upload-cta {
+    width: 100%;
+    max-width: none;
+    text-align: center;
   }
 }
 
 @media (max-width: 640px) {
-  .brand-text {
-    font-size: 20px;
+  .topbar {
+    align-items: center;
+    gap: 8px;
   }
 
-  .user-id {
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-text {
+    font-size: 16px;
+  }
+
+  .brand-kicker {
+    font-size: 9px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .user-name {
     font-size: 11px;
+  }
+
+  .selection-indicator,
+  .option-chevron,
+  .mega-arrow {
+    display: none;
   }
 
   .footer {
@@ -2533,39 +3503,35 @@ watch(
   }
 
   .mega-dropdown {
-    position: fixed;
-    top: 154px;
-    left: 12px !important;
-    right: 12px !important;
-    width: auto;
-    max-height: calc(100vh - 176px);
-    overflow-y: auto;
-    transform: none !important;
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    transform: none;
   }
 
   .mega-dropdown::before {
     display: none;
   }
 
+  .user-menu {
+    order: 3;
+    width: auto;
+  }
+
+  .user-menu-trigger {
+    width: auto;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .user-dropdown {
+    position: static;
+    margin-top: 8px;
+  }
+
   .mega-item {
     grid-template-columns: 52px 1fr;
-  }
-
-  .mega-arrow {
-    display: none;
-  }
-
-  .mega-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 18px;
-  }
-
-  .mega-footer,
-  .logout-modal-actions,
-  .settings-modal-actions {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .settings-option-card {
@@ -2577,18 +3543,354 @@ watch(
     align-self: flex-end;
   }
 }
+</style>
 
-@media (prefers-reduced-motion: reduce) {
-  .mega-item:hover .mega-icon,
-  .mega-item.active .mega-icon {
-    animation: none;
+<!--
+  MOBILE TOPBAR CONSISTENCY PATCH
+  This final scoped block intentionally comes last so it overrides the older
+  licensing-only mobile header rules above. It matches the Home page mobile
+  topbar spacing and keeps the Dashboard submenu fully visible.
+-->
+<style scoped>
+@media (max-width: 1000px) {
+  .topbar {
+    height: auto !important;
+    min-height: 64px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
   }
 
-  * {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  .topbar-left {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .brand-kicker {
+    font-size: 9px !important;
+    line-height: 1.05 !important;
+  }
+
+  .brand-text {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .user-menu {
+    order: 3 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .user-menu-trigger {
+    width: auto !important;
+    min-height: 42px !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 11px !important;
+  }
+
+  .user-id {
+    display: none !important;
+  }
+
+  .user-name {
+    display: inline !important;
+    font-size: 11px !important;
+  }
+
+  .user-caret {
+    display: none !important;
+  }
+
+  .topbar-nav {
+    order: 4 !important;
+    width: 100% !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .topbar-nav.mobile-open {
+    display: flex !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .nav-item,
+  .dashboard-trigger {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: space-between !important;
+    padding: 11px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .nav-item.active,
+  .dashboard-trigger.active,
+  .nav-item:hover,
+  .dashboard-trigger:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  .dashboard-active::after {
+    display: none !important;
+  }
+
+  .dashboard-menu {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .dashboard-caret {
+    width: 14px !important;
+    height: 14px !important;
+    flex: 0 0 14px !important;
+  }
+
+  .dashboard-caret path {
+    fill: currentColor !important;
+  }
+
+  .mega-dropdown {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: linear-gradient(180deg, #062f68 0%, #052452 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: none !important;
+    z-index: 1001 !important;
+  }
+
+  .mega-dropdown::before {
+    display: none !important;
+  }
+
+  .mega-dropdown-head {
+    display: block !important;
+    padding: 0 0 12px !important;
+    margin: 0 0 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .mega-kicker {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #93c5fd !important;
+  }
+
+  .mega-dropdown-head h3,
+  .mega-dropdown-head p {
+    display: none !important;
+  }
+
+  .mega-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mega-item {
+    display: grid !important;
+    grid-template-columns: 46px 1fr 22px !important;
+    align-items: center !important;
+    min-height: 74px !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .mega-item:hover,
+  .mega-item.active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(147, 197, 253, 0.4) !important;
+  }
+
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    padding: 11px !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  .mega-copy strong {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .mega-copy small {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  .mega-arrow {
+    display: grid !important;
+    width: 22px !important;
+    height: 22px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+  }
+
+  .mega-arrow svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mega-arrow svg path {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.4 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .mega-footer {
+    margin-top: 10px !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .mega-footer span {
+    display: none !important;
+  }
+
+  .mega-footer button {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    color: #0d468f !important;
+    font-weight: 900 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-wrap {
+    gap: 10px !important;
+  }
+
+  .user-menu-trigger {
+    gap: 8px !important;
+  }
+
+  .topbar {
+    padding-inline: 14px !important;
+  }
+}
+</style>
+
+<!--
+  ICON CONSISTENCY PATCH
+  These rules force the Vehicle mobile Dashboard submenu icons to render with
+  the same size, stroke, color, and alignment as the Licensing page submenu.
+-->
+<style scoped>
+@media (max-width: 1000px) {
+  .mega-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    padding: 11px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: none !important;
+  }
+
+  .mega-item:first-child .mega-icon {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  }
+
+  :deep(.mega-icon svg) {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    display: block !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.85 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    transform: none !important;
+  }
+
+  :deep(.mega-icon svg circle[fill="currentColor"]),
+  :deep(.mega-icon svg path[fill="currentColor"]) {
+    fill: currentColor !important;
+    stroke: none !important;
   }
 }
 </style>

@@ -1,5 +1,14 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "./router"; // 👈 add this
+import router from "./router";
+
+// ─── GLOBAL STYLES ────────────────────────────────────────────
 import "./assets/main.css";
-createApp(App).use(router).mount("#app");
+import "./assets/mobile-global.css";
+
+// ─── APP BOOTSTRAP ────────────────────────────────────────────
+const app = createApp(App);
+
+app.use(router);
+
+app.mount("#app");
